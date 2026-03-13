@@ -61,11 +61,7 @@ export default function App() {
     return Boolean(getTelegramWebApp());
   }
 
-  function isAndroid(): boolean {
-    return /Android/i.test(navigator.userAgent);
-  }
-
-  function openHttpLink(url: string) {
+  function openExternalLink(url: string) {
     const tg = getTelegramWebApp();
 
     if (isTelegramMiniApp()) {
@@ -103,12 +99,12 @@ export default function App() {
     const cleanUserId = String(userId || "").trim();
 
     if (cleanUsername) {
-      openHttpLink(`https://t.me/${cleanUsername}`);
+      openExternalLink(`https://t.me/${cleanUsername}`);
       return;
     }
 
     if (cleanUserId) {
-      openHttpLink(`https://t.me/user?id=${cleanUserId}`);
+      openExternalLink(`https://t.me/user?id=${cleanUserId}`);
       return;
     }
 
@@ -283,84 +279,9 @@ export default function App() {
     return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
   }
 
-  function buildYandexNavigatorUrl(
-    points: Array<{ lat: number; lon: number }>
-  ): string {
-    if (points.length < 2) return "";
-
-    const from = points[0];
-    const to = points[points.length - 1];
-    const vias = points.slice(1, -1);
-
-    const params: string[] = [
-      `lat_from=${encodeURIComponent(String(from.lat))}`,
-      `lon_from=${encodeURIComponent(String(from.lon))}`,
-      `lat_to=${encodeURIComponent(String(to.lat))}`,
-      `lon_to=${encodeURIComponent(String(to.lon))}`,
-    ];
-
-    vias.forEach((p, index) => {
-      params.push(`lat_via_${index}=${encodeURIComponent(String(p.lat))}`);
-      params.push(`lon_via_${index}=${encodeURIComponent(String(p.lon))}`);
-    });
-
-    return `yandexnavi://build_route_on_map?${params.join("&")}`;
-  }
-
-  function openNavigatorDirectOrBrowser(
-    points: Array<{ lat: number; lon: number }>
-  ) {
+  function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
     const webUrl = buildYandexWebRouteUrl(points);
-    const navigatorUrl = buildYandexNavigatorUrl(points);
-
-    if (isTelegramMiniApp()) {
-      openHttpLink(webUrl);
-      return;
-    }
-
-    if (!isAndroid() || !navigatorUrl) {
-      openHttpLink(webUrl);
-      return;
-    }
-
-    let appOpened = false;
-
-    const onBlur = () => {
-      appOpened = true;
-    };
-
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        appOpened = true;
-      }
-    };
-
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    try {
-      const link = document.createElement("a");
-      link.href = navigatorUrl;
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (e) {
-      console.error("navigator deeplink failed:", e);
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      openHttpLink(webUrl);
-      return;
-    }
-
-    setTimeout(() => {
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-
-      if (!appOpened) {
-        openHttpLink(webUrl);
-      }
-    }, 1400);
+    openExternalLink(webUrl);
   }
 
   async function openSingleClientRoute(order: Order) {
@@ -377,7 +298,7 @@ export default function App() {
     try {
       const pos = await getCurrentPosition();
 
-      openNavigatorDirectOrBrowser([
+      openYandexRoute([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
       ]);
@@ -417,7 +338,7 @@ export default function App() {
         })),
       ];
 
-      openNavigatorDirectOrBrowser(points);
+      openYandexRoute(points);
     } catch (e) {
       console.error(e);
       alert(
