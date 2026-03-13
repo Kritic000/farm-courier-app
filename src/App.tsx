@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbwaCCHYw0LahmrxjDUT29iGUSRNfuzXp-VKTftOh8_Z2hQsYxX8YGaG7yRd-pfOJGk/ex";
+  "https://script.google.com/macros/s/AKfycbwaCCHYw0LahmrxjDUT29iGUSRNfuzXp-VKTftOh8_Z2hQsYxX8YGaG7yRd-pfOJGk/exec";
 const API_TOKEN = "Kjhytccb18@";
 
 type Order = {
