@@ -84,30 +84,9 @@ export default function App() {
     }
 
     const encodedAddress = encodeURIComponent(address);
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (!isMobile) {
-      openExternalLink(`https://yandex.ru/maps/?text=${encodedAddress}`);
-      return;
-    }
-
-    // Сначала пробуем открыть Яндекс.Навигатор app link.
-    // Это ближе к "открыть сразу в приложении".
-    const naviUrl = `yandexnavi://build_route_on_map?lat_to=&lon_to=&q=${encodedAddress}`;
-
-    // Фолбэк: если навигатор не подхватится, откроем обычные Яндекс Карты.
     const webUrl = `https://yandex.ru/maps/?text=${encodedAddress}`;
 
-    try {
-      window.location.href = naviUrl;
-
-      setTimeout(() => {
-        openExternalLink(webUrl);
-      }, 1200);
-    } catch (e) {
-      console.warn("Failed to open yandexnavi link:", e);
-      openExternalLink(webUrl);
-    }
+    openExternalLink(webUrl);
   }
 
   function openTelegram(username?: string, userId?: string) {
@@ -164,7 +143,31 @@ export default function App() {
     return activeOrders.filter((o) => String(o.address || "").trim());
   }, [activeOrders]);
 
-  function openRouteAll() {
+  async function getCurrentPosition(): Promise<{ lat: number; lon: number }> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Геолокация не поддерживается"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          });
+        },
+        (err) => reject(err),
+        {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0,
+        }
+      );
+    });
+  }
+
+  async function openRouteAll() {
     if (activeOrdersWithAddress.length === 0) {
       alert("Нет активных заказов с адресами");
       return;
@@ -179,15 +182,24 @@ export default function App() {
       return;
     }
 
-    const routeText = addresses
-      .map((addr) => encodeURIComponent(addr))
-      .join("~");
+    try {
+      const pos = await getCurrentPosition();
+      const startPoint = `${pos.lat},${pos.lon}`;
 
-    const routeUrl = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
+      const routePoints = [
+        encodeURIComponent(startPoint),
+        ...addresses.map((addr) => encodeURIComponent(addr)),
+      ].join("~");
 
-    // Общий маршрут оставляем через браузер,
-    // потому что именно там он у тебя строится корректнее.
-    openExternalLink(routeUrl);
+      const routeUrl = `https://yandex.ru/maps/?rtext=${routePoints}&rtt=auto`;
+
+      openExternalLink(routeUrl);
+    } catch (e) {
+      console.error(e);
+      alert(
+        "Не удалось получить текущее местоположение. Разреши доступ к геолокации и попробуй ещё раз."
+      );
+    }
   }
 
   return (
