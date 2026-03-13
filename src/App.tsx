@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzKQ2DChUfqo-j2lB1LQH07epwav91vrjYoCSwFoKgsNbqgbgFKUVRNfTFiS78i7Hk/exec";
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbzKQ2DChUfqo-j2lB1LQH07epwav91vrjYoCSwFoKgsNbqgbgFKUVRNfTFiS78i7Hk/exec";
 const API_TOKEN = "Kjhytccb18@";
 
 type Order = {
@@ -35,9 +36,9 @@ export default function App() {
       const data = await res.json();
 
       if (tab === "active") {
-        setActiveOrders(data.orders || []);
+        setActiveOrders(Array.isArray(data.orders) ? data.orders : []);
       } else {
-        setDoneOrders(data.orders || []);
+        setDoneOrders(Array.isArray(data.orders) ? data.orders : []);
       }
     } catch (e) {
       console.error(e);
@@ -48,12 +49,19 @@ export default function App() {
   }
 
   function call(phone: string) {
-    if (!phone) return;
+    if (!phone) {
+      alert("Номер телефона не указан");
+      return;
+    }
     window.location.href = `tel:${phone}`;
   }
 
   function openMap(address: string) {
-    if (!address) return;
+    if (!address) {
+      alert("Адрес не указан");
+      return;
+    }
+
     window.open(
       `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`,
       "_blank"
@@ -61,14 +69,20 @@ export default function App() {
   }
 
   function openTelegram(username?: string, userId?: string) {
-    if (username) {
-      window.open(`https://t.me/${username}`, "_blank");
+    const cleanUsername = String(username || "").replace(/^@/, "").trim();
+    const cleanUserId = String(userId || "").trim();
+
+    if (cleanUsername) {
+      window.open(`https://t.me/${cleanUsername}`, "_blank");
       return;
     }
 
-    if (userId) {
-      window.open(`https://t.me/user?id=${userId}`, "_blank");
+    if (cleanUserId) {
+      window.open(`https://t.me/user?id=${cleanUserId}`, "_blank");
+      return;
     }
+
+    alert("У клиента не указан Telegram username или tgUserId");
   }
 
   async function markDone(orderId: string) {
@@ -104,10 +118,52 @@ export default function App() {
 
   const orders = tab === "active" ? activeOrders : doneOrders;
 
+  const activeOrdersWithAddress = useMemo(() => {
+    return activeOrders.filter((o) => String(o.address || "").trim());
+  }, [activeOrders]);
+
+  function openRouteAll() {
+    if (activeOrdersWithAddress.length === 0) {
+      alert("Нет активных заказов с адресами");
+      return;
+    }
+
+    const addresses = activeOrdersWithAddress
+      .map((o) => String(o.address || "").trim())
+      .filter(Boolean);
+
+    if (addresses.length === 1) {
+      window.open(
+        `https://yandex.ru/maps/?text=${encodeURIComponent(addresses[0])}`,
+        "_blank"
+      );
+      return;
+    }
+
+    const points = addresses.join("~");
+
+    window.open(
+      `https://yandex.ru/maps/?rtext=${encodeURIComponent(points)}&rtt=auto`,
+      "_blank"
+    );
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <div style={styles.header}>Курьер</div>
+        <div style={styles.headerRow}>
+          <div style={styles.header}>Курьер</div>
+
+          <button style={styles.refreshBtn} onClick={loadOrders}>
+            ↻ Обновить
+          </button>
+        </div>
+
+        {tab === "active" && (
+          <button style={styles.routeAllBtn} onClick={openRouteAll}>
+            🧭 Маршрут по всем активным заказам
+          </button>
+        )}
 
         <div style={styles.tabs}>
           <button
@@ -221,10 +277,36 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: 640,
     margin: "0 auto",
   },
+  headerRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 12,
+  },
   header: {
     fontSize: 28,
     fontWeight: 700,
-    marginBottom: 16,
+  },
+  refreshBtn: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #cfd6e4",
+    background: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  routeAllBtn: {
+    width: "100%",
+    marginBottom: 12,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "none",
+    background: "#111827",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: 15,
   },
   tabs: {
     display: "flex",
