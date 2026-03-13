@@ -48,6 +48,29 @@ export default function App() {
     }
   }
 
+  function getTelegramWebApp(): any {
+    return (window as any)?.Telegram?.WebApp ?? null;
+  }
+
+  function openExternalLink(url: string) {
+    const tg = getTelegramWebApp();
+
+    try {
+      if (tg?.openLink) {
+        // Telegram Mini Apps умеют открывать ссылку во внешнем браузере.
+        // Это надёжнее для Яндекс-маршрутов на телефоне.
+        tg.openLink(url, {
+          try_browser: "chrome",
+        });
+        return;
+      }
+    } catch (e) {
+      console.warn("tg.openLink failed:", e);
+    }
+
+    window.open(url, "_blank");
+  }
+
   function call(phone: string) {
     if (!phone) {
       alert("Номер телефона не указан");
@@ -62,19 +85,8 @@ export default function App() {
       return;
     }
 
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      window.location.href = `https://yandex.ru/maps/?text=${encodeURIComponent(
-        address
-      )}`;
-      return;
-    }
-
-    window.open(
-      `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`,
-      "_blank"
-    );
+    const url = `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`;
+    openExternalLink(url);
   }
 
   function openTelegram(username?: string, userId?: string) {
@@ -145,15 +157,7 @@ export default function App() {
       const oneUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(
         addresses[0]
       )}`;
-
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        window.location.href = oneUrl;
-        return;
-      }
-
-      window.open(oneUrl, "_blank");
+      openExternalLink(oneUrl);
       return;
     }
 
@@ -162,14 +166,11 @@ export default function App() {
       .join("~");
 
     const routeUrl = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      window.location.href = routeUrl;
-      return;
-    }
-
-    window.open(routeUrl, "_blank");
+    // Главное изменение:
+    // маршрут по всем адресам открываем не внутри mini app,
+    // а через внешний браузер Telegram openLink.
+    openExternalLink(routeUrl);
   }
 
   return (
