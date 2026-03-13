@@ -123,30 +123,32 @@ export default function App() {
   }, [activeOrders]);
 
   function openRouteAll() {
-    if (activeOrdersWithAddress.length === 0) {
-      alert("Нет активных заказов с адресами");
-      return;
-    }
+  if (activeOrdersWithAddress.length === 0) {
+    alert("Нет активных заказов с адресами");
+    return;
+  }
 
-    const addresses = activeOrdersWithAddress
-      .map((o) => String(o.address || "").trim())
-      .filter(Boolean);
+  const addresses = activeOrdersWithAddress
+    .map((o) => String(o.address || "").trim())
+    .filter(Boolean);
 
-    if (addresses.length === 1) {
-      window.open(
-        `https://yandex.ru/maps/?text=${encodeURIComponent(addresses[0])}`,
-        "_blank"
-      );
-      return;
-    }
-
-    const points = addresses.join("~");
-
+  if (addresses.length === 1) {
     window.open(
-      `https://yandex.ru/maps/?rtext=${encodeURIComponent(points)}&rtt=auto`,
+      `https://yandex.ru/maps/?text=${encodeURIComponent(addresses[0])}`,
       "_blank"
     );
+    return;
   }
+
+  const routeText = addresses
+    .map((addr) => encodeURIComponent(addr))
+    .join("~");
+
+  window.open(
+    `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`,
+    "_blank"
+  );
+}
 
   return (
     <div style={styles.page}>
