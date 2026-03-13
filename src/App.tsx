@@ -62,6 +62,15 @@ export default function App() {
       return;
     }
 
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      window.location.href = `https://yandex.ru/maps/?text=${encodeURIComponent(
+        address
+      )}`;
+      return;
+    }
+
     window.open(
       `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`,
       "_blank"
@@ -123,32 +132,45 @@ export default function App() {
   }, [activeOrders]);
 
   function openRouteAll() {
-  if (activeOrdersWithAddress.length === 0) {
-    alert("Нет активных заказов с адресами");
-    return;
+    if (activeOrdersWithAddress.length === 0) {
+      alert("Нет активных заказов с адресами");
+      return;
+    }
+
+    const addresses = activeOrdersWithAddress
+      .map((o) => String(o.address || "").trim())
+      .filter(Boolean);
+
+    if (addresses.length === 1) {
+      const oneUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(
+        addresses[0]
+      )}`;
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        window.location.href = oneUrl;
+        return;
+      }
+
+      window.open(oneUrl, "_blank");
+      return;
+    }
+
+    const routeText = addresses
+      .map((addr) => encodeURIComponent(addr))
+      .join("~");
+
+    const routeUrl = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      window.location.href = routeUrl;
+      return;
+    }
+
+    window.open(routeUrl, "_blank");
   }
-
-  const addresses = activeOrdersWithAddress
-    .map((o) => String(o.address || "").trim())
-    .filter(Boolean);
-
-  if (addresses.length === 1) {
-    window.open(
-      `https://yandex.ru/maps/?text=${encodeURIComponent(addresses[0])}`,
-      "_blank"
-    );
-    return;
-  }
-
-  const routeText = addresses
-    .map((addr) => encodeURIComponent(addr))
-    .join("~");
-
-  window.open(
-    `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`,
-    "_blank"
-  );
-}
 
   return (
     <div style={styles.page}>
