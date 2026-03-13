@@ -53,11 +53,26 @@ export default function App() {
     }
   }
 
+  function getTelegramWebApp(): any {
+    return (window as any)?.Telegram?.WebApp ?? null;
+  }
+
   function openExternalLink(url: string) {
+    const tg = getTelegramWebApp();
+
+    try {
+      if (tg?.openLink) {
+        tg.openLink(url, { try_browser: "chrome" });
+        return;
+      }
+    } catch (e) {
+      console.warn("tg.openLink failed:", e);
+    }
+
     try {
       window.open(url, "_blank");
     } catch (e) {
-      console.error("openExternalLink error:", e);
+      console.error("window.open failed:", e);
       window.location.href = url;
     }
   }
@@ -78,12 +93,12 @@ export default function App() {
     const cleanUserId = String(userId || "").trim();
 
     if (cleanUsername) {
-      window.open(`https://t.me/${cleanUsername}`, "_blank");
+      openExternalLink(`https://t.me/${cleanUsername}`);
       return;
     }
 
     if (cleanUserId) {
-      window.open(`https://t.me/user?id=${cleanUserId}`, "_blank");
+      openExternalLink(`https://t.me/user?id=${cleanUserId}`);
       return;
     }
 
@@ -258,30 +273,9 @@ export default function App() {
     return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
   }
 
-  function buildYandexAppRouteUrl(points: Array<{ lat: number; lon: number }>) {
-    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
-    return `ymapsbm1://route?route_points=${encodeURIComponent(routeText)}&route_type=auto`;
-  }
-
   function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
-    const appUrl = buildYandexAppRouteUrl(points);
     const webUrl = buildYandexWebRouteUrl(points);
-
-    const start = Date.now();
-
-    try {
-      window.location.href = appUrl;
-    } catch (e) {
-      console.warn("Direct app deeplink failed:", e);
-      openExternalLink(webUrl);
-      return;
-    }
-
-    setTimeout(() => {
-      if (Date.now() - start < 1800) {
-        openExternalLink(webUrl);
-      }
-    }, 1200);
+    openExternalLink(webUrl);
   }
 
   async function openSingleClientRoute(order: Order) {
