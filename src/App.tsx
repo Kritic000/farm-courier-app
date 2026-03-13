@@ -27,6 +27,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [buildingRoute, setBuildingRoute] = useState(false);
+  const [copyingRoute, setCopyingRoute] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -80,6 +81,32 @@ export default function App() {
     } catch (e) {
       console.error("window.open failed:", e);
       window.location.href = url;
+    }
+  }
+
+  async function copyText(text: string) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      const ok = document.execCommand("copy");
+      document.body.removeChild(textArea);
+
+      return ok;
+    } catch (e) {
+      console.error("copyText failed:", e);
+      return false;
     }
   }
 
@@ -284,7 +311,7 @@ export default function App() {
     openExternalLink(webUrl);
   }
 
-  async function openSingleClientRoute(order: Order) {
+  async function copySingleClientRoute(order: Order) {
     const lat = parseCoord(order.lat);
     const lon = parseCoord(order.lon);
 
@@ -297,11 +324,18 @@ export default function App() {
 
     try {
       const pos = await getCurrentPosition();
-
-      openYandexRoute([
+      const url = buildYandexWebRouteUrl([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
       ]);
+
+      const copied = await copyText(url);
+
+      if (copied) {
+        alert("Ссылка на маршрут скопирована");
+      } else {
+        alert("Не удалось скопировать ссылку");
+      }
     } catch (e) {
       console.error(e);
       alert("Не удалось получить текущее местоположение");
@@ -349,6 +383,42 @@ export default function App() {
     }
   }
 
+  async function copyRouteAll() {
+    if (activeOrdersWithCoords.length === 0) {
+      alert("Нет активных заказов с координатами. Сначала нажми '📍 Координаты'.");
+      return;
+    }
+
+    try {
+      setCopyingRoute(true);
+
+      const pos = await getCurrentPosition();
+      const sortedOrders = sortOrdersNearest(pos, activeOrdersWithCoords);
+
+      const points = [
+        { lat: pos.lat, lon: pos.lon },
+        ...sortedOrders.map((o) => ({
+          lat: parseCoord(o.lat)!,
+          lon: parseCoord(o.lon)!,
+        })),
+      ];
+
+      const url = buildYandexWebRouteUrl(points);
+      const copied = await copyText(url);
+
+      if (copied) {
+        alert("Ссылка на маршрут по всем заказам скопирована");
+      } else {
+        alert("Не удалось скопировать ссылку");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Не удалось получить текущее местоположение");
+    } finally {
+      setCopyingRoute(false);
+    }
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
@@ -371,15 +441,27 @@ export default function App() {
         </div>
 
         {tab === "active" && (
-          <button
-            style={styles.routeAllBtn}
-            onClick={openRouteAll}
-            disabled={buildingRoute}
-          >
-            {buildingRoute
-              ? "Строю маршрут..."
-              : "🧭 Маршрут по всем активным заказам"}
-          </button>
+          <>
+            <button
+              style={styles.routeAllBtn}
+              onClick={openRouteAll}
+              disabled={buildingRoute}
+            >
+              {buildingRoute
+                ? "Строю маршрут..."
+                : "🧭 Маршрут по всем активным заказам"}
+            </button>
+
+            <button
+              style={styles.copyRouteBtn}
+              onClick={copyRouteAll}
+              disabled={copyingRoute}
+            >
+              {copyingRoute
+                ? "Копирую..."
+                : "📋 Скопировать маршрут по всем заказам"}
+            </button>
+          </>
         )}
 
         <div style={styles.tabs}>
@@ -476,6 +558,13 @@ export default function App() {
                 >
                   Маршрут
                 </button>
+
+                <button
+                  style={styles.actionBtn}
+                  onClick={() => copySingleClientRoute(o)}
+                >
+                  📋 Скопировать ссылку
+                </button>
               </div>
 
               {tab === "active" ? (
@@ -541,12 +630,24 @@ const styles: Record<string, React.CSSProperties> = {
   },
   routeAllBtn: {
     width: "100%",
-    marginBottom: 12,
+    marginBottom: 10,
     padding: "12px 14px",
     borderRadius: 12,
     border: "none",
     background: "#111827",
     color: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: 15,
+  },
+  copyRouteBtn: {
+    width: "100%",
+    marginBottom: 12,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #cfd6e4",
+    background: "#fff",
+    color: "#111827",
     cursor: "pointer",
     fontWeight: 700,
     fontSize: 15,
