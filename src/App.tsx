@@ -17,6 +17,7 @@ type Order = {
   status?: string;
   lat?: string;
   lon?: string;
+  geocodedAddress?: string;
 };
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
   const [doneOrders, setDoneOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [buildingRoute, setBuildingRoute] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -60,9 +62,7 @@ export default function App() {
 
     try {
       if (tg?.openLink) {
-        tg.openLink(url, {
-          try_browser: "chrome",
-        });
+        tg.openLink(url, { try_browser: "chrome" });
         return;
       }
     } catch (e) {
@@ -73,11 +73,14 @@ export default function App() {
   }
 
   function call(phone: string) {
-    if (!phone) {
+    const cleanPhone = String(phone || "").trim();
+
+    if (!cleanPhone) {
       alert("Номер телефона не указан");
       return;
     }
-    window.location.href = `tel:${phone}`;
+
+    window.location.href = `tel:${cleanPhone}`;
   }
 
   function openTelegram(username?: string, userId?: string) {
@@ -150,7 +153,9 @@ export default function App() {
         return;
       }
 
-      alert(`Координаты обновлены. Обработано: ${data?.updated || 0}`);
+      alert(
+        `Координаты обновлены.\nОбработано: ${data?.updated || 0}\nНе найдено: ${data?.failed || 0}`
+      );
       await loadOrders();
     } catch (e) {
       console.error(e);
@@ -160,26 +165,15 @@ export default function App() {
     }
   }
 
-  function openSingleClientRoute(order: Order) {
-    const lat = String(order.lat || "").trim();
-    const lon = String(order.lon || "").trim();
-
-    if (!lat || !lon) {
-      alert("У этого заказа ещё нет координат. Сначала нажми '📍 Координаты'.");
-      return;
-    }
-
-    const url = `https://yandex.ru/maps/?ll=${lon},${lat}&z=17&pt=${lon},${lat},pm2rdm`;
-    openExternalLink(url);
+  function parseCoord(value: unknown): number | null {
+    const n = Number(String(value ?? "").replace(",", ".").trim());
+    return Number.isFinite(n) ? n : null;
   }
 
-  const orders = tab === "active" ? activeOrders : doneOrders;
-
-  const activeOrdersWithCoords = useMemo(() => {
-    return activeOrders.filter(
-      (o) => String(o.lat || "").trim() && String(o.lon || "").trim()
-    );
-  }, [activeOrders]);
+  function isValidLatLon(lat: number | null, lon: number | null): boolean {
+    if (lat === null || lon === null) return false;
+    return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+  }
 
   async function getCurrentPosition(): Promise<{ lat: number; lon: number }> {
     return new Promise((resolve, reject) => {
@@ -205,6 +199,109 @@ export default function App() {
     });
   }
 
+  function toRad(v: number) {
+    return (v * Math.PI) / 180;
+  }
+
+  function distanceMeters(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) {
+    const R = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+
+  function sortOrdersNearest(
+    start: { lat: number; lon: number },
+    orders: Order[]
+  ): Order[] {
+    const remaining = [...orders];
+    const result: Order[] = [];
+    let current = { lat: start.lat, lon: start.lon };
+
+    while (remaining.length > 0) {
+      let bestIndex = 0;
+      let bestDistance = Infinity;
+
+      for (let i = 0; i < remaining.length; i++) {
+        const lat = parseCoord(remaining[i].lat);
+        const lon = parseCoord(remaining[i].lon);
+
+        if (!isValidLatLon(lat, lon)) continue;
+
+        const dist = distanceMeters(current.lat, current.lon, lat!, lon!);
+
+        if (dist < bestDistance) {
+          bestDistance = dist;
+          bestIndex = i;
+        }
+      }
+
+      const next = remaining.splice(bestIndex, 1)[0];
+      result.push(next);
+
+      const nextLat = parseCoord(next.lat);
+      const nextLon = parseCoord(next.lon);
+
+      if (isValidLatLon(nextLat, nextLon)) {
+        current = { lat: nextLat!, lon: nextLon! };
+      }
+    }
+
+    return result;
+  }
+
+  function buildYandexRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
+  }
+
+  async function openSingleClientRoute(order: Order) {
+    const lat = parseCoord(order.lat);
+    const lon = parseCoord(order.lon);
+
+    if (!isValidLatLon(lat, lon)) {
+      alert("У этого заказа ещё нет корректных координат. Сначала нажми '📍 Координаты'.");
+      return;
+    }
+
+    try {
+      const pos = await getCurrentPosition();
+
+      const url = buildYandexRouteUrl([
+        { lat: pos.lat, lon: pos.lon },
+        { lat: lat!, lon: lon! },
+      ]);
+
+      openExternalLink(url);
+    } catch (e) {
+      console.error(e);
+      alert("Не удалось получить текущее местоположение");
+    }
+  }
+
+  const orders = tab === "active" ? activeOrders : doneOrders;
+
+  const activeOrdersWithCoords = useMemo(() => {
+    return activeOrders.filter((o) => {
+      const lat = parseCoord(o.lat);
+      const lon = parseCoord(o.lon);
+      return isValidLatLon(lat, lon);
+    });
+  }, [activeOrders]);
+
   async function openRouteAll() {
     if (activeOrdersWithCoords.length === 0) {
       alert("Нет активных заказов с координатами. Сначала нажми '📍 Координаты'.");
@@ -212,24 +309,28 @@ export default function App() {
     }
 
     try {
+      setBuildingRoute(true);
+
       const pos = await getCurrentPosition();
+      const sortedOrders = sortOrdersNearest(pos, activeOrdersWithCoords);
 
       const points = [
-        `${pos.lon},${pos.lat}`,
-        ...activeOrdersWithCoords.map(
-          (o) => `${String(o.lon).trim()},${String(o.lat).trim()}`
-        ),
+        { lat: pos.lat, lon: pos.lon },
+        ...sortedOrders.map((o) => ({
+          lat: parseCoord(o.lat)!,
+          lon: parseCoord(o.lon)!,
+        })),
       ];
 
-      const routeText = points.join("~");
-      const url = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
-
+      const url = buildYandexRouteUrl(points);
       openExternalLink(url);
     } catch (e) {
       console.error(e);
       alert(
         "Не удалось получить текущее местоположение. Разреши доступ к геолокации и попробуй ещё раз."
       );
+    } finally {
+      setBuildingRoute(false);
     }
   }
 
@@ -255,8 +356,14 @@ export default function App() {
         </div>
 
         {tab === "active" && (
-          <button style={styles.routeAllBtn} onClick={openRouteAll}>
-            🧭 Маршрут по всем активным заказам
+          <button
+            style={styles.routeAllBtn}
+            onClick={openRouteAll}
+            disabled={buildingRoute}
+          >
+            {buildingRoute
+              ? "Строю маршрут..."
+              : "🧭 Маршрут по всем активным заказам"}
           </button>
         )}
 
@@ -320,6 +427,12 @@ export default function App() {
               <div style={styles.row}>
                 <b>lon:</b> {o.lon || "—"}
               </div>
+
+              {o.geocodedAddress ? (
+                <div style={styles.row}>
+                  <b>Геокод найден как:</b> {o.geocodedAddress}
+                </div>
+              ) : null}
 
               {o.itemsText ? (
                 <div style={styles.itemsBox}>
@@ -459,6 +572,7 @@ const styles: Record<string, React.CSSProperties> = {
   row: {
     marginBottom: 8,
     fontSize: 15,
+    lineHeight: 1.45,
   },
   itemsBox: {
     marginTop: 10,
