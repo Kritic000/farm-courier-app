@@ -15,6 +15,8 @@ type Order = {
   itemsText?: string;
   total: number;
   status?: string;
+  lat?: string;
+  lon?: string;
 };
 
 export default function App() {
@@ -22,6 +24,7 @@ export default function App() {
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [doneOrders, setDoneOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -48,45 +51,12 @@ export default function App() {
     }
   }
 
-  function getTelegramWebApp(): any {
-    return (window as any)?.Telegram?.WebApp ?? null;
-  }
-
-  function openExternalLink(url: string) {
-    const tg = getTelegramWebApp();
-
-    try {
-      if (tg?.openLink) {
-        tg.openLink(url, {
-          try_browser: "chrome",
-        });
-        return;
-      }
-    } catch (e) {
-      console.warn("tg.openLink failed:", e);
-    }
-
-    window.open(url, "_blank");
-  }
-
   function call(phone: string) {
     if (!phone) {
       alert("Номер телефона не указан");
       return;
     }
     window.location.href = `tel:${phone}`;
-  }
-
-  function openSingleClientRoute(address: string) {
-    if (!address) {
-      alert("Адрес не указан");
-      return;
-    }
-
-    const encodedAddress = encodeURIComponent(address);
-    const webUrl = `https://yandex.ru/maps/?text=${encodedAddress}`;
-
-    openExternalLink(webUrl);
   }
 
   function openTelegram(username?: string, userId?: string) {
@@ -137,69 +107,86 @@ export default function App() {
     }
   }
 
-  const orders = tab === "active" ? activeOrders : doneOrders;
+  async function geocodeOrdersNow() {
+    try {
+      setGeocoding(true);
 
-  const activeOrdersWithAddress = useMemo(() => {
-    return activeOrders.filter((o) => String(o.address || "").trim());
-  }, [activeOrders]);
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify({
+          token: API_TOKEN,
+          action: "geocodeOrders",
+        }),
+      });
 
-  async function getCurrentPosition(): Promise<{ lat: number; lon: number }> {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Геолокация не поддерживается"));
+      const data = await res.json();
+
+      if (data?.error) {
+        alert(data.error);
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          resolve({
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-          });
-        },
-        (err) => reject(err),
-        {
-          enableHighAccuracy: true,
-          timeout: 12000,
-          maximumAge: 0,
-        }
-      );
-    });
-  }
-
-  async function openRouteAll() {
-    if (activeOrdersWithAddress.length === 0) {
-      alert("Нет активных заказов с адресами");
-      return;
-    }
-
-    const addresses = activeOrdersWithAddress
-      .map((o) => String(o.address || "").trim())
-      .filter(Boolean);
-
-    if (addresses.length === 1) {
-      openSingleClientRoute(addresses[0]);
-      return;
-    }
-
-    try {
-      const pos = await getCurrentPosition();
-      const startPoint = `${pos.lat},${pos.lon}`;
-
-      const routePoints = [
-        encodeURIComponent(startPoint),
-        ...addresses.map((addr) => encodeURIComponent(addr)),
-      ].join("~");
-
-      const routeUrl = `https://yandex.ru/maps/?rtext=${routePoints}&rtt=auto`;
-
-      openExternalLink(routeUrl);
+      alert(`Координаты обновлены. Обработано: ${data?.updated || 0}`);
+      await loadOrders();
     } catch (e) {
       console.error(e);
-      alert(
-        "Не удалось получить текущее местоположение. Разреши доступ к геолокации и попробуй ещё раз."
-      );
+      alert("Не удалось получить координаты адресов");
+    } finally {
+      setGeocoding(false);
     }
+  }
+
+  function openSingleClientRoute(order: Order) {
+    const lat = String(order.lat || "").trim();
+    const lon = String(order.lon || "").trim();
+
+    if (!lat || !lon) {
+      alert("У этого заказа ещё нет координат. Сначала нажми 'Обновить координаты'.");
+      return;
+    }
+
+    const url = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
+    window.location.href = url;
+  }
+
+  const orders = tab === "active" ? activeOrders : doneOrders;
+
+  const activeOrdersWithCoords = useMemo(() => {
+    return activeOrders.filter(
+      (o) => String(o.lat || "").trim() && String(o.lon || "").trim()
+    );
+  }, [activeOrders]);
+
+  function openRouteAll() {
+    if (activeOrdersWithCoords.length === 0) {
+      alert("Нет активных заказов с координатами. Сначала нажми 'Обновить координаты'.");
+      return;
+    }
+
+    if (activeOrdersWithCoords.length === 1) {
+      openSingleClientRoute(activeOrdersWithCoords[0]);
+      return;
+    }
+
+    const first = activeOrdersWithCoords[0];
+    const rest = activeOrdersWithCoords.slice(1);
+
+    const latTo = String(first.lat || "").trim();
+    const lonTo = String(first.lon || "").trim();
+
+    const viaLat = rest.map((o) => String(o.lat || "").trim()).filter(Boolean).join(",");
+    const viaLon = rest.map((o) => String(o.lon || "").trim()).filter(Boolean).join(",");
+
+    let url = `yandexnavi://build_route_on_map?lat_to=${latTo}&lon_to=${lonTo}`;
+
+    if (viaLat && viaLon) {
+      url += `&lat_via=${viaLat}&lon_via=${viaLon}`;
+    }
+
+    window.location.href = url;
   }
 
   return (
@@ -208,9 +195,19 @@ export default function App() {
         <div style={styles.headerRow}>
           <div style={styles.header}>Курьер</div>
 
-          <button style={styles.refreshBtn} onClick={loadOrders}>
-            ↻ Обновить
-          </button>
+          <div style={styles.headerBtns}>
+            <button style={styles.refreshBtn} onClick={loadOrders}>
+              ↻ Обновить
+            </button>
+
+            <button
+              style={styles.geoBtn}
+              onClick={geocodeOrdersNow}
+              disabled={geocoding}
+            >
+              {geocoding ? "..." : "📍 Координаты"}
+            </button>
+          </div>
         </div>
 
         {tab === "active" && (
@@ -272,6 +269,14 @@ export default function App() {
                 <b>Сумма:</b> {o.total || 0} ₽
               </div>
 
+              <div style={styles.row}>
+                <b>lat:</b> {o.lat || "—"}
+              </div>
+
+              <div style={styles.row}>
+                <b>lon:</b> {o.lon || "—"}
+              </div>
+
               {o.itemsText ? (
                 <div style={styles.itemsBox}>
                   <b>Состав заказа:</b>
@@ -295,7 +300,7 @@ export default function App() {
 
                 <button
                   style={styles.actionBtn}
-                  onClick={() => openSingleClientRoute(o.address)}
+                  onClick={() => openSingleClientRoute(o)}
                 >
                   Маршрут
                 </button>
@@ -342,7 +347,19 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 28,
     fontWeight: 700,
   },
+  headerBtns: {
+    display: "flex",
+    gap: 8,
+  },
   refreshBtn: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #cfd6e4",
+    background: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  geoBtn: {
     padding: "10px 12px",
     borderRadius: 10,
     border: "1px solid #cfd6e4",
