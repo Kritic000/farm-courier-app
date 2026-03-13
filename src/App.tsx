@@ -53,23 +53,13 @@ export default function App() {
     }
   }
 
-  function getTelegramWebApp(): any {
-    return (window as any)?.Telegram?.WebApp ?? null;
-  }
-
   function openExternalLink(url: string) {
-    const tg = getTelegramWebApp();
-
     try {
-      if (tg?.openLink) {
-        tg.openLink(url, { try_browser: "chrome" });
-        return;
-      }
+      window.open(url, "_blank");
     } catch (e) {
-      console.warn("tg.openLink failed:", e);
+      console.error("openExternalLink error:", e);
+      window.location.href = url;
     }
-
-    window.open(url, "_blank");
   }
 
   function call(phone: string) {
@@ -263,9 +253,35 @@ export default function App() {
     return result;
   }
 
-  function buildYandexRouteUrl(points: Array<{ lat: number; lon: number }>) {
+  function buildYandexWebRouteUrl(points: Array<{ lat: number; lon: number }>) {
     const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
     return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
+  }
+
+  function buildYandexAppRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `ymapsbm1://route?route_points=${encodeURIComponent(routeText)}&route_type=auto`;
+  }
+
+  function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
+    const appUrl = buildYandexAppRouteUrl(points);
+    const webUrl = buildYandexWebRouteUrl(points);
+
+    const start = Date.now();
+
+    try {
+      window.location.href = appUrl;
+    } catch (e) {
+      console.warn("Direct app deeplink failed:", e);
+      openExternalLink(webUrl);
+      return;
+    }
+
+    setTimeout(() => {
+      if (Date.now() - start < 1800) {
+        openExternalLink(webUrl);
+      }
+    }, 1200);
   }
 
   async function openSingleClientRoute(order: Order) {
@@ -280,12 +296,10 @@ export default function App() {
     try {
       const pos = await getCurrentPosition();
 
-      const url = buildYandexRouteUrl([
+      openYandexRoute([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
       ]);
-
-      openExternalLink(url);
     } catch (e) {
       console.error(e);
       alert("Не удалось получить текущее местоположение");
@@ -322,8 +336,7 @@ export default function App() {
         })),
       ];
 
-      const url = buildYandexRouteUrl(points);
-      openExternalLink(url);
+      openYandexRoute(points);
     } catch (e) {
       console.error(e);
       alert(
