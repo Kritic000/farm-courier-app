@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxZnux6FnGeM8gQ-WuYp3O1ANDyMAKFwRdtN65ln6kDaC51NIQJA0JzSLfM_ibZKXw/exec";
+  "https://script.google.com/macros/s/AKfycbzKQ2DChUfqo-j2lB1LQH07epwav91vrjYoCSwFoKgsNbqgbgFKUVRNfTFiS78i7Hk/exec";
 const API_TOKEN = "Kjhytccb18@";
 
 type Order = {
@@ -49,6 +49,27 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function getTelegramWebApp(): any {
+    return (window as any)?.Telegram?.WebApp ?? null;
+  }
+
+  function openExternalLink(url: string) {
+    const tg = getTelegramWebApp();
+
+    try {
+      if (tg?.openLink) {
+        tg.openLink(url, {
+          try_browser: "chrome",
+        });
+        return;
+      }
+    } catch (e) {
+      console.warn("tg.openLink failed:", e);
+    }
+
+    window.open(url, "_blank");
   }
 
   function call(phone: string) {
@@ -144,12 +165,12 @@ export default function App() {
     const lon = String(order.lon || "").trim();
 
     if (!lat || !lon) {
-      alert("У этого заказа ещё нет координат. Сначала нажми 'Обновить координаты'.");
+      alert("У этого заказа ещё нет координат. Сначала нажми '📍 Координаты'.");
       return;
     }
 
-    const url = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
-    window.location.href = url;
+    const url = `https://yandex.ru/maps/?ll=${lon},${lat}&z=17&pt=${lon},${lat},pm2rdm`;
+    openExternalLink(url);
   }
 
   const orders = tab === "active" ? activeOrders : doneOrders;
@@ -160,33 +181,56 @@ export default function App() {
     );
   }, [activeOrders]);
 
-  function openRouteAll() {
+  async function getCurrentPosition(): Promise<{ lat: number; lon: number }> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Геолокация не поддерживается"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          });
+        },
+        (err) => reject(err),
+        {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0,
+        }
+      );
+    });
+  }
+
+  async function openRouteAll() {
     if (activeOrdersWithCoords.length === 0) {
-      alert("Нет активных заказов с координатами. Сначала нажми 'Обновить координаты'.");
+      alert("Нет активных заказов с координатами. Сначала нажми '📍 Координаты'.");
       return;
     }
 
-    if (activeOrdersWithCoords.length === 1) {
-      openSingleClientRoute(activeOrdersWithCoords[0]);
-      return;
+    try {
+      const pos = await getCurrentPosition();
+
+      const points = [
+        `${pos.lon},${pos.lat}`,
+        ...activeOrdersWithCoords.map(
+          (o) => `${String(o.lon).trim()},${String(o.lat).trim()}`
+        ),
+      ];
+
+      const routeText = points.join("~");
+      const url = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
+
+      openExternalLink(url);
+    } catch (e) {
+      console.error(e);
+      alert(
+        "Не удалось получить текущее местоположение. Разреши доступ к геолокации и попробуй ещё раз."
+      );
     }
-
-    const first = activeOrdersWithCoords[0];
-    const rest = activeOrdersWithCoords.slice(1);
-
-    const latTo = String(first.lat || "").trim();
-    const lonTo = String(first.lon || "").trim();
-
-    const viaLat = rest.map((o) => String(o.lat || "").trim()).filter(Boolean).join(",");
-    const viaLon = rest.map((o) => String(o.lon || "").trim()).filter(Boolean).join(",");
-
-    let url = `yandexnavi://build_route_on_map?lat_to=${latTo}&lon_to=${lonTo}`;
-
-    if (viaLat && viaLon) {
-      url += `&lat_via=${viaLat}&lon_via=${viaLon}`;
-    }
-
-    window.location.href = url;
   }
 
   return (
