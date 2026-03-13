@@ -57,8 +57,6 @@ export default function App() {
 
     try {
       if (tg?.openLink) {
-        // Telegram Mini Apps умеют открывать ссылку во внешнем браузере.
-        // Это надёжнее для Яндекс-маршрутов на телефоне.
         tg.openLink(url, {
           try_browser: "chrome",
         });
@@ -143,7 +141,33 @@ export default function App() {
     return activeOrders.filter((o) => String(o.address || "").trim());
   }, [activeOrders]);
 
-  function openRouteAll() {
+  function getCurrentPosition(): Promise<{ lat: number; lon: number }> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Геолокация не поддерживается на этом устройстве"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          reject(err);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0,
+        }
+      );
+    });
+  }
+
+  async function openRouteAll() {
     if (activeOrdersWithAddress.length === 0) {
       alert("Нет активных заказов с адресами");
       return;
@@ -161,16 +185,24 @@ export default function App() {
       return;
     }
 
-    const routeText = addresses
-      .map((addr) => encodeURIComponent(addr))
-      .join("~");
+    try {
+      const pos = await getCurrentPosition();
 
-    const routeUrl = `https://yandex.ru/maps/?rtext=${routeText}&rtt=auto`;
+      const startPoint = `${pos.lat},${pos.lon}`;
+      const routePoints = [
+        encodeURIComponent(startPoint),
+        ...addresses.map((addr) => encodeURIComponent(addr)),
+      ].join("~");
 
-    // Главное изменение:
-    // маршрут по всем адресам открываем не внутри mini app,
-    // а через внешний браузер Telegram openLink.
-    openExternalLink(routeUrl);
+      const routeUrl = `https://yandex.ru/maps/?rtext=${routePoints}&rtt=auto`;
+      openExternalLink(routeUrl);
+    } catch (e) {
+      console.error(e);
+
+      alert(
+        "Не удалось получить текущее местоположение. Разреши доступ к геолокации и попробуй ещё раз."
+      );
+    }
   }
 
   return (
