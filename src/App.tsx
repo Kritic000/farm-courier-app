@@ -60,22 +60,16 @@ export default function App() {
     return (window as any)?.Telegram?.WebApp ?? null;
   }
 
-  function isTelegramMiniApp(): boolean {
-    return Boolean(getTelegramWebApp());
-  }
-
   function openExternalLink(url: string) {
     const tg = getTelegramWebApp();
 
-    if (isTelegramMiniApp()) {
-      try {
-        if (tg?.openLink) {
-          tg.openLink(url);
-          return;
-        }
-      } catch (e) {
-        console.warn("tg.openLink failed:", e);
+    try {
+      if (tg?.openLink) {
+        tg.openLink(url);
+        return;
       }
+    } catch (e) {
+      console.warn("tg.openLink failed:", e);
     }
 
     try {
@@ -336,7 +330,6 @@ export default function App() {
 
     try {
       const pos = await getCurrentPosition();
-
       const url = buildYandexWebRouteUrl([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
