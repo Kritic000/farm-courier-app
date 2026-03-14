@@ -470,27 +470,39 @@ export default function App() {
 
   return (
     <div style={styles.page}>
+      <div style={styles.backgroundGlowTop} />
+      <div style={styles.backgroundGlowBottom} />
+
       <div style={styles.container}>
-        <div style={styles.headerRow}>
-          <div style={styles.header}>Курьер</div>
+        <div style={styles.heroCard}>
+          <div style={styles.heroTop}>
+            <div>
+              <div style={styles.kicker}>Farm Courier</div>
+              <div style={styles.header}>Курьер</div>
+            </div>
 
-          <div style={styles.headerBtns}>
-            <button style={styles.refreshBtn} onClick={loadOrders}>
-              ↻ Обновить
-            </button>
+            <div style={styles.headerBtns}>
+              <button style={styles.refreshBtn} onClick={loadOrders}>
+                ↻ Обновить
+              </button>
 
-            <button
-              style={styles.geoBtn}
-              onClick={geocodeOrdersNow}
-              disabled={geocoding}
-            >
-              {geocoding ? "..." : "📍 Координаты"}
-            </button>
+              <button
+                style={styles.geoBtn}
+                onClick={geocodeOrdersNow}
+                disabled={geocoding}
+              >
+                {geocoding ? "..." : "📍 Координаты"}
+              </button>
+            </div>
+          </div>
+
+          <div style={styles.heroSubtext}>
+            Управление активными доставками и архивом заказов
           </div>
         </div>
 
         {tab === "active" && (
-          <>
+          <div style={styles.toolsCard}>
             <button
               style={styles.routeAllBtn}
               onClick={openRouteAll}
@@ -510,29 +522,31 @@ export default function App() {
                 ? "Копирую..."
                 : "📋 Скопировать маршрут по всем заказам"}
             </button>
-          </>
+          </div>
         )}
 
-        <div style={styles.tabs}>
-          <button
-            style={{
-              ...styles.tabBtn,
-              ...(tab === "active" ? styles.tabBtnActive : {}),
-            }}
-            onClick={() => setTab("active")}
-          >
-            Активные
-          </button>
+        <div style={styles.tabsShell}>
+          <div style={styles.tabs}>
+            <button
+              style={{
+                ...styles.tabBtn,
+                ...(tab === "active" ? styles.tabBtnActive : {}),
+              }}
+              onClick={() => setTab("active")}
+            >
+              Активные
+            </button>
 
-          <button
-            style={{
-              ...styles.tabBtn,
-              ...(tab === "archive" ? styles.tabBtnActive : {}),
-            }}
-            onClick={() => setTab("archive")}
-          >
-            Архив
-          </button>
+            <button
+              style={{
+                ...styles.tabBtn,
+                ...(tab === "archive" ? styles.tabBtnActive : {}),
+              }}
+              onClick={() => setTab("archive")}
+            >
+              Архив
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -546,86 +560,91 @@ export default function App() {
         ) : (
           orders.map((o, index) => (
             <div key={`${o.orderId}-${o.createdAt || ""}-${index}`} style={styles.card}>
-              <div style={styles.row}>
-                <b>Неделя:</b> {formatWeekLabel(o.createdAt)}
+              <div style={styles.cardTop}>
+                <div style={styles.cardBadge}>Заказ</div>
+                <div style={styles.cardWeek}>{formatWeekLabel(o.createdAt)}</div>
               </div>
 
-              <div style={styles.row}>
-                <b>Заказ №:</b> {o.orderId || "—"}
+              <div style={styles.cardTitleRow}>
+                <div style={styles.cardTitle}>№ {o.orderId || "—"}</div>
+                <div style={styles.cardPrice}>{formatMoney(o.total)}</div>
               </div>
 
-              <div style={styles.row}>
-                <b>Имя:</b> {o.name || "—"}
+              <div style={styles.metaGrid}>
+                <div style={styles.metaItem}>
+                  <div style={styles.metaLabel}>Имя</div>
+                  <div style={styles.metaValue}>{o.name || "—"}</div>
+                </div>
+
+                <div style={styles.metaItem}>
+                  <div style={styles.metaLabel}>Телефон</div>
+                  <div style={styles.metaValue}>{o.phone || "—"}</div>
+                </div>
               </div>
 
-              <div style={styles.row}>
-                <b>Телефон:</b> {o.phone || "—"}
-              </div>
-
-              <div style={styles.row}>
-                <b>Адрес:</b> {o.address || "—"}
-              </div>
-
-              <div style={styles.row}>
-                <b>Сумма:</b> {formatMoney(o.total)}
+              <div style={styles.addressPanel}>
+                <div style={styles.panelLabel}>Адрес</div>
+                <div style={styles.addressValue}>{o.address || "—"}</div>
               </div>
 
               {o.itemsText ? (
                 <div style={styles.itemsBox}>
-                  <b>Состав заказа:</b>
-                  <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
-                    {o.itemsText}
-                  </div>
+                  <div style={styles.panelLabel}>Состав заказа</div>
+                  <div style={styles.panelText}>{o.itemsText}</div>
                 </div>
               ) : null}
 
               {o.notes ? (
                 <div style={styles.notesBox}>
-                  <b>Примечание:</b>
-                  <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
-                    {o.notes}
-                  </div>
+                  <div style={styles.panelLabel}>Примечание</div>
+                  <div style={styles.panelText}>{o.notes}</div>
                 </div>
               ) : null}
 
               <div style={styles.coordsBox}>
+                <div style={styles.panelLabel}>Координаты</div>
+
                 <div style={styles.coordRow}>
-                  <b>lat:</b> {o.lat || "—"}
+                  <span style={styles.coordKey}>lat</span>
+                  <span style={styles.coordValue}>{o.lat || "—"}</span>
                 </div>
+
                 <div style={styles.coordRow}>
-                  <b>lon:</b> {o.lon || "—"}
+                  <span style={styles.coordKey}>lon</span>
+                  <span style={styles.coordValue}>{o.lon || "—"}</span>
                 </div>
+
                 {o.geocodedAddress ? (
-                  <div style={styles.coordRow}>
-                    <b>Геокод найден как:</b> {o.geocodedAddress}
+                  <div style={styles.geoHint}>
+                    Геокод найден как: {o.geocodedAddress}
                   </div>
                 ) : null}
               </div>
 
               <div style={styles.actions}>
-                <button style={styles.actionBtn} onClick={() => call(o.phone)}>
+                <button style={styles.primaryActionBtn} onClick={() => call(o.phone)}>
                   Позвонить
                 </button>
 
                 <button
-                  style={styles.actionBtn}
+                  style={styles.secondaryActionBtn}
                   onClick={() => openTelegram(o.tgUsername, o.tgUserId)}
                 >
                   Telegram
                 </button>
 
                 <button
-                  style={styles.actionBtn}
+                  style={styles.secondaryActionBtn}
                   onClick={() => openSingleClientRoute(o)}
                 >
                   Маршрут
                 </button>
 
                 <button
-                  style={styles.actionBtn}
+                  style={styles.secondaryActionBtn}
                   onClick={() => copySingleClientRoute(o)}
                 >
-                  📋 Скопировать ссылку
+                  Скопировать ссылку
                 </button>
               </div>
 
@@ -650,193 +669,374 @@ export default function App() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: `linear-gradient(180deg, ${COLORS.cream} 0%, #f7f1d5 100%)`,
+    background: `linear-gradient(180deg, ${COLORS.darkOlive} 0%, #364722 35%, ${COLORS.cream} 100%)`,
     padding: 16,
     fontFamily: "Arial, sans-serif",
     boxSizing: "border-box",
     color: COLORS.darkOlive,
+    position: "relative",
+    overflowX: "hidden",
+  },
+  backgroundGlowTop: {
+    position: "fixed",
+    top: -120,
+    right: -80,
+    width: 260,
+    height: 260,
+    borderRadius: "50%",
+    background: "rgba(221,161,94,0.18)",
+    filter: "blur(40px)",
+    pointerEvents: "none",
+  },
+  backgroundGlowBottom: {
+    position: "fixed",
+    bottom: -120,
+    left: -80,
+    width: 260,
+    height: 260,
+    borderRadius: "50%",
+    background: "rgba(188,108,37,0.12)",
+    filter: "blur(50px)",
+    pointerEvents: "none",
   },
   container: {
-    maxWidth: 640,
+    maxWidth: 680,
     margin: "0 auto",
+    position: "relative",
+    zIndex: 1,
   },
-  headerRow: {
+  heroCard: {
+    background: "rgba(254,250,224,0.12)",
+    border: "1px solid rgba(254,250,224,0.14)",
+    borderRadius: 28,
+    padding: 18,
+    marginBottom: 14,
+    backdropFilter: "blur(10px)",
+    boxShadow: "0 18px 44px rgba(0,0,0,0.18)",
+  },
+  heroTop: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  kicker: {
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: COLORS.sand,
+    marginBottom: 6,
   },
   header: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 800,
-    color: COLORS.darkOlive,
-    letterSpacing: 0.3,
+    color: COLORS.cream,
+    lineHeight: 1.05,
+    letterSpacing: 0.2,
+  },
+  heroSubtext: {
+    marginTop: 10,
+    color: "rgba(254,250,224,0.82)",
+    fontSize: 14,
+    lineHeight: 1.45,
   },
   headerBtns: {
     display: "flex",
     gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
   },
   refreshBtn: {
     padding: "10px 12px",
-    borderRadius: 12,
-    border: `1px solid ${COLORS.sand}`,
-    background: COLORS.cream,
-    color: COLORS.darkOlive,
+    borderRadius: 14,
+    border: "1px solid rgba(254,250,224,0.16)",
+    background: "rgba(254,250,224,0.08)",
+    color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 700,
-    boxShadow: "0 2px 8px rgba(40,54,24,0.08)",
+    boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
   },
   geoBtn: {
     padding: "10px 12px",
-    borderRadius: 12,
-    border: `1px solid ${COLORS.brown}`,
-    background: COLORS.sand,
-    color: COLORS.darkOlive,
+    borderRadius: 14,
+    border: `1px solid ${COLORS.sand}`,
+    background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
+    color: COLORS.cream,
     cursor: "pointer",
-    fontWeight: 700,
-    boxShadow: "0 2px 8px rgba(40,54,24,0.1)",
+    fontWeight: 800,
+    boxShadow: "0 10px 18px rgba(188,108,37,0.24)",
+  },
+  toolsCard: {
+    background: COLORS.cream,
+    borderRadius: 24,
+    padding: 14,
+    marginBottom: 14,
+    border: `1px solid rgba(188,108,37,0.18)`,
+    boxShadow: "0 18px 36px rgba(40,54,24,0.14)",
   },
   routeAllBtn: {
     width: "100%",
     marginBottom: 10,
-    padding: "13px 14px",
-    borderRadius: 16,
+    padding: "14px 16px",
+    borderRadius: 18,
     border: "none",
-    background: COLORS.darkOlive,
+    background: `linear-gradient(180deg, ${COLORS.darkOlive} 0%, ${COLORS.olive} 100%)`,
     color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 8px 18px rgba(40,54,24,0.18)",
+    boxShadow: "0 14px 22px rgba(40,54,24,0.22)",
   },
   copyRouteBtn: {
     width: "100%",
-    marginBottom: 12,
-    padding: "13px 14px",
-    borderRadius: 16,
+    padding: "14px 16px",
+    borderRadius: 18,
     border: `1px solid ${COLORS.sand}`,
-    background: COLORS.cream,
+    background: "#fffdf5",
     color: COLORS.brown,
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 4px 12px rgba(40,54,24,0.08)",
+    boxShadow: "0 8px 16px rgba(40,54,24,0.08)",
+  },
+  tabsShell: {
+    background: "rgba(254,250,224,0.14)",
+    borderRadius: 22,
+    padding: 6,
+    marginBottom: 16,
+    boxShadow: "0 12px 26px rgba(0,0,0,0.14)",
+    backdropFilter: "blur(8px)",
   },
   tabs: {
     display: "flex",
     gap: 8,
-    marginBottom: 16,
   },
   tabBtn: {
     flex: 1,
-    padding: "12px 14px",
+    padding: "13px 14px",
     borderRadius: 16,
-    border: `1px solid ${COLORS.sand}`,
-    background: COLORS.cream,
-    color: COLORS.darkOlive,
+    border: "1px solid transparent",
+    background: "rgba(254,250,224,0.08)",
+    color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 800,
-    boxShadow: "0 4px 10px rgba(40,54,24,0.06)",
+    fontSize: 15,
   },
   tabBtnActive: {
-    background: COLORS.olive,
-    color: COLORS.cream,
-    border: `1px solid ${COLORS.olive}`,
-    boxShadow: "0 8px 18px rgba(96,108,56,0.22)",
+    background: COLORS.cream,
+    color: COLORS.darkOlive,
+    boxShadow: "0 10px 18px rgba(0,0,0,0.12)",
   },
   info: {
     background: COLORS.cream,
-    borderRadius: 18,
+    borderRadius: 22,
     padding: 18,
-    border: `1px solid ${COLORS.sand}`,
+    border: `1px solid rgba(188,108,37,0.16)`,
     color: COLORS.darkOlive,
-    boxShadow: "0 8px 18px rgba(40,54,24,0.08)",
+    boxShadow: "0 14px 28px rgba(40,54,24,0.12)",
   },
   card: {
-    background: "rgba(254, 250, 224, 0.96)",
-    borderRadius: 22,
+    background: "rgba(254,250,224,0.98)",
+    borderRadius: 28,
     padding: 16,
-    marginBottom: 14,
-    border: `1px solid ${COLORS.sand}`,
-    boxShadow: "0 10px 24px rgba(40,54,24,0.12)",
+    marginBottom: 16,
+    border: `1px solid rgba(188,108,37,0.18)`,
+    boxShadow: "0 20px 40px rgba(40,54,24,0.14)",
     color: COLORS.darkOlive,
   },
-  row: {
+  cardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  cardBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "6px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    background: "rgba(96,108,56,0.1)",
+    color: COLORS.olive,
+  },
+  cardWeek: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: COLORS.brown,
+  },
+  cardTitleRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 14,
+  },
+  cardTitle: {
+    fontSize: 28,
+    fontWeight: 800,
+    color: COLORS.darkOlive,
+    lineHeight: 1,
+  },
+  cardPrice: {
+    fontSize: 22,
+    fontWeight: 800,
+    color: COLORS.brown,
+    whiteSpace: "nowrap",
+  },
+  metaGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+    marginBottom: 12,
+  },
+  metaItem: {
+    background: "#fffdf6",
+    borderRadius: 18,
+    padding: 12,
+    border: `1px solid rgba(221,161,94,0.3)`,
+  },
+  metaLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    color: COLORS.olive,
+    marginBottom: 6,
+  },
+  metaValue: {
+    fontSize: 15,
+    fontWeight: 700,
+    color: COLORS.darkOlive,
+    lineHeight: 1.35,
+    wordBreak: "break-word",
+  },
+  addressPanel: {
+    marginTop: 2,
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: 20,
+    background: `linear-gradient(180deg, rgba(221,161,94,0.12) 0%, rgba(254,250,224,0.8) 100%)`,
+    border: `1px solid rgba(221,161,94,0.35)`,
+  },
+  addressValue: {
+    fontSize: 16,
+    fontWeight: 700,
+    lineHeight: 1.45,
+    color: COLORS.darkOlive,
+  },
+  panelLabel: {
+    fontSize: 12,
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+    color: COLORS.olive,
     marginBottom: 8,
+  },
+  panelText: {
+    whiteSpace: "pre-wrap",
     fontSize: 15,
     lineHeight: 1.45,
     color: COLORS.darkOlive,
   },
   itemsBox: {
     marginTop: 10,
-    padding: 12,
-    borderRadius: 16,
-    background: "#f7f1d5",
-    border: `1px solid ${COLORS.sand}`,
-    fontSize: 14,
-    color: COLORS.darkOlive,
+    padding: 14,
+    borderRadius: 20,
+    background: "#f8f2dc",
+    border: `1px solid rgba(221,161,94,0.28)`,
   },
   notesBox: {
     marginTop: 10,
-    padding: 12,
-    borderRadius: 16,
-    background: "#fae6cb",
-    border: `1px solid ${COLORS.brown}`,
-    fontSize: 14,
-    color: COLORS.darkOlive,
+    padding: 14,
+    borderRadius: 20,
+    background: "#f8ead7",
+    border: `1px solid rgba(188,108,37,0.32)`,
   },
   coordsBox: {
-    marginTop: 10,
-    padding: 12,
-    borderRadius: 16,
-    background: "#f3ecd0",
-    border: `1px solid ${COLORS.sand}`,
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 20,
+    background: "#f4efd9",
+    border: `1px solid rgba(221,161,94,0.24)`,
   },
   coordRow: {
-    marginBottom: 6,
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 8,
     fontSize: 14,
     lineHeight: 1.4,
+  },
+  coordKey: {
+    fontWeight: 800,
+    color: COLORS.olive,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  coordValue: {
+    fontWeight: 700,
     color: COLORS.darkOlive,
+    textAlign: "right",
+    wordBreak: "break-all",
+  },
+  geoHint: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 1.4,
+    color: COLORS.brown,
   },
   actions: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
     marginTop: 14,
   },
-  actionBtn: {
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: `1px solid ${COLORS.sand}`,
-    background: COLORS.cream,
+  primaryActionBtn: {
+    padding: "12px 14px",
+    borderRadius: 16,
+    border: "none",
+    background: `linear-gradient(180deg, ${COLORS.brown} 0%, #9f561d 100%)`,
+    color: COLORS.cream,
+    cursor: "pointer",
+    fontWeight: 800,
+    boxShadow: "0 12px 18px rgba(188,108,37,0.22)",
+  },
+  secondaryActionBtn: {
+    padding: "12px 14px",
+    borderRadius: 16,
+    border: `1px solid rgba(221,161,94,0.45)`,
+    background: "#fffdf6",
     color: COLORS.darkOlive,
     cursor: "pointer",
-    fontWeight: 700,
-    boxShadow: "0 2px 8px rgba(40,54,24,0.06)",
+    fontWeight: 800,
+    boxShadow: "0 6px 12px rgba(40,54,24,0.06)",
   },
   doneBtn: {
     marginTop: 14,
     width: "100%",
-    padding: "13px 14px",
-    borderRadius: 16,
+    padding: "14px 16px",
+    borderRadius: 18,
     border: "none",
-    background: COLORS.brown,
+    background: `linear-gradient(180deg, ${COLORS.olive} 0%, ${COLORS.darkOlive} 100%)`,
     color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 8px 18px rgba(188,108,37,0.24)",
+    boxShadow: "0 14px 22px rgba(40,54,24,0.22)",
   },
   archiveLabel: {
     marginTop: 14,
     width: "100%",
-    padding: "12px 14px",
-    borderRadius: 16,
-    background: COLORS.sand,
-    color: COLORS.darkOlive,
+    padding: "13px 14px",
+    borderRadius: 18,
+    background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
+    color: COLORS.cream,
     fontWeight: 800,
     textAlign: "center",
-    boxShadow: "0 6px 14px rgba(221,161,94,0.2)",
+    boxShadow: "0 12px 18px rgba(188,108,37,0.2)",
   },
 };
