@@ -28,6 +28,9 @@ const COLORS = {
   cream: "#fefae0",
   sand: "#dda15e",
   brown: "#bc6c25",
+  softCream: "#fffaf0",
+  mist: "rgba(254, 250, 224, 0.72)",
+  glass: "rgba(254, 250, 224, 0.12)",
 };
 
 export default function App() {
@@ -470,41 +473,42 @@ export default function App() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.backgroundGlowTop} />
-      <div style={styles.backgroundGlowBottom} />
+      <div style={styles.bgShape1} />
+      <div style={styles.bgShape2} />
+      <div style={styles.bgShape3} />
 
       <div style={styles.container}>
-        <div style={styles.heroCard}>
-          <div style={styles.heroTop}>
+        <div style={styles.hero}>
+          <div style={styles.heroLeft}>
+            <div style={styles.logoDot} />
             <div>
-              <div style={styles.kicker}>Farm Courier</div>
-              <div style={styles.header}>Курьер</div>
-            </div>
-
-            <div style={styles.headerBtns}>
-              <button style={styles.refreshBtn} onClick={loadOrders}>
-                ↻ Обновить
-              </button>
-
-              <button
-                style={styles.geoBtn}
-                onClick={geocodeOrdersNow}
-                disabled={geocoding}
-              >
-                {geocoding ? "..." : "📍 Координаты"}
-              </button>
+              <div style={styles.brand}>Farm Courier</div>
+              <div style={styles.heroTitle}>Управление доставками</div>
+              <div style={styles.heroText}>
+                Активные заказы, маршрут, связь с клиентом и архив — всё в одном месте.
+              </div>
             </div>
           </div>
 
-          <div style={styles.heroSubtext}>
-            Управление активными доставками и архивом заказов
+          <div style={styles.heroActions}>
+            <button style={styles.ghostBtn} onClick={loadOrders}>
+              ↻ Обновить
+            </button>
+
+            <button
+              style={styles.goldBtn}
+              onClick={geocodeOrdersNow}
+              disabled={geocoding}
+            >
+              {geocoding ? "..." : "📍 Координаты"}
+            </button>
           </div>
         </div>
 
         {tab === "active" && (
-          <div style={styles.toolsCard}>
+          <div style={styles.topTools}>
             <button
-              style={styles.routeAllBtn}
+              style={styles.bigPrimaryBtn}
               onClick={openRouteAll}
               disabled={buildingRoute}
             >
@@ -514,7 +518,7 @@ export default function App() {
             </button>
 
             <button
-              style={styles.copyRouteBtn}
+              style={styles.bigSecondaryBtn}
               onClick={copyRouteAll}
               disabled={copyingRoute}
             >
@@ -525,34 +529,32 @@ export default function App() {
           </div>
         )}
 
-        <div style={styles.tabsShell}>
-          <div style={styles.tabs}>
-            <button
-              style={{
-                ...styles.tabBtn,
-                ...(tab === "active" ? styles.tabBtnActive : {}),
-              }}
-              onClick={() => setTab("active")}
-            >
-              Активные
-            </button>
+        <div style={styles.tabsWrap}>
+          <button
+            style={{
+              ...styles.tabBtn,
+              ...(tab === "active" ? styles.tabBtnActive : {}),
+            }}
+            onClick={() => setTab("active")}
+          >
+            Активные
+          </button>
 
-            <button
-              style={{
-                ...styles.tabBtn,
-                ...(tab === "archive" ? styles.tabBtnActive : {}),
-              }}
-              onClick={() => setTab("archive")}
-            >
-              Архив
-            </button>
-          </div>
+          <button
+            style={{
+              ...styles.tabBtn,
+              ...(tab === "archive" ? styles.tabBtnActive : {}),
+            }}
+            onClick={() => setTab("archive")}
+          >
+            Архив
+          </button>
         </div>
 
         {loading ? (
-          <div style={styles.info}>Загрузка…</div>
+          <div style={styles.infoBox}>Загрузка…</div>
         ) : orders.length === 0 ? (
-          <div style={styles.info}>
+          <div style={styles.infoBox}>
             {tab === "active"
               ? "Активных заказов на текущую неделю нет"
               : "Архив пока пуст"}
@@ -560,88 +562,88 @@ export default function App() {
         ) : (
           orders.map((o, index) => (
             <div key={`${o.orderId}-${o.createdAt || ""}-${index}`} style={styles.card}>
-              <div style={styles.cardTop}>
-                <div style={styles.cardBadge}>Заказ</div>
-                <div style={styles.cardWeek}>{formatWeekLabel(o.createdAt)}</div>
-              </div>
-
-              <div style={styles.cardTitleRow}>
-                <div style={styles.cardTitle}>№ {o.orderId || "—"}</div>
-                <div style={styles.cardPrice}>{formatMoney(o.total)}</div>
-              </div>
-
-              <div style={styles.metaGrid}>
-                <div style={styles.metaItem}>
-                  <div style={styles.metaLabel}>Имя</div>
-                  <div style={styles.metaValue}>{o.name || "—"}</div>
+              <div style={styles.cardHeader}>
+                <div style={styles.cardHeaderLeft}>
+                  <div style={styles.orderPill}>Заказ</div>
+                  <div style={styles.orderNumber}>№ {o.orderId || "—"}</div>
+                  <div style={styles.orderDate}>{formatWeekLabel(o.createdAt)}</div>
                 </div>
 
-                <div style={styles.metaItem}>
-                  <div style={styles.metaLabel}>Телефон</div>
-                  <div style={styles.metaValue}>{o.phone || "—"}</div>
+                <div style={styles.priceBadge}>{formatMoney(o.total)}</div>
+              </div>
+
+              <div style={styles.quickGrid}>
+                <div style={styles.quickItem}>
+                  <div style={styles.quickLabel}>Имя</div>
+                  <div style={styles.quickValue}>{o.name || "—"}</div>
+                </div>
+
+                <div style={styles.quickItem}>
+                  <div style={styles.quickLabel}>Телефон</div>
+                  <div style={styles.quickValue}>{o.phone || "—"}</div>
                 </div>
               </div>
 
-              <div style={styles.addressPanel}>
-                <div style={styles.panelLabel}>Адрес</div>
-                <div style={styles.addressValue}>{o.address || "—"}</div>
+              <div style={styles.addressBox}>
+                <div style={styles.sectionLabel}>Адрес</div>
+                <div style={styles.addressText}>{o.address || "—"}</div>
               </div>
 
               {o.itemsText ? (
-                <div style={styles.itemsBox}>
-                  <div style={styles.panelLabel}>Состав заказа</div>
-                  <div style={styles.panelText}>{o.itemsText}</div>
+                <div style={styles.sectionCard}>
+                  <div style={styles.sectionLabel}>Состав заказа</div>
+                  <div style={styles.sectionText}>{o.itemsText}</div>
                 </div>
               ) : null}
 
               {o.notes ? (
-                <div style={styles.notesBox}>
-                  <div style={styles.panelLabel}>Примечание</div>
-                  <div style={styles.panelText}>{o.notes}</div>
+                <div style={styles.notesCard}>
+                  <div style={styles.sectionLabel}>Примечание</div>
+                  <div style={styles.sectionText}>{o.notes}</div>
                 </div>
               ) : null}
 
-              <div style={styles.coordsBox}>
-                <div style={styles.panelLabel}>Координаты</div>
+              <div style={styles.coordsCard}>
+                <div style={styles.sectionLabel}>Координаты</div>
 
-                <div style={styles.coordRow}>
-                  <span style={styles.coordKey}>lat</span>
-                  <span style={styles.coordValue}>{o.lat || "—"}</span>
+                <div style={styles.coordLine}>
+                  <span style={styles.coordName}>LAT</span>
+                  <span style={styles.coordNum}>{o.lat || "—"}</span>
                 </div>
 
-                <div style={styles.coordRow}>
-                  <span style={styles.coordKey}>lon</span>
-                  <span style={styles.coordValue}>{o.lon || "—"}</span>
+                <div style={styles.coordLine}>
+                  <span style={styles.coordName}>LON</span>
+                  <span style={styles.coordNum}>{o.lon || "—"}</span>
                 </div>
 
                 {o.geocodedAddress ? (
-                  <div style={styles.geoHint}>
+                  <div style={styles.geoText}>
                     Геокод найден как: {o.geocodedAddress}
                   </div>
                 ) : null}
               </div>
 
-              <div style={styles.actions}>
-                <button style={styles.primaryActionBtn} onClick={() => call(o.phone)}>
+              <div style={styles.actionsGrid}>
+                <button style={styles.callBtn} onClick={() => call(o.phone)}>
                   Позвонить
                 </button>
 
                 <button
-                  style={styles.secondaryActionBtn}
+                  style={styles.lightBtn}
                   onClick={() => openTelegram(o.tgUsername, o.tgUserId)}
                 >
                   Telegram
                 </button>
 
                 <button
-                  style={styles.secondaryActionBtn}
+                  style={styles.darkBtn}
                   onClick={() => openSingleClientRoute(o)}
                 >
                   Маршрут
                 </button>
 
                 <button
-                  style={styles.secondaryActionBtn}
+                  style={styles.lightBtn}
                   onClick={() => copySingleClientRoute(o)}
                 >
                   Скопировать ссылку
@@ -656,7 +658,7 @@ export default function App() {
                   ✅ Доставлено
                 </button>
               ) : (
-                <div style={styles.archiveLabel}>В архиве</div>
+                <div style={styles.archiveBadge}>В архиве</div>
               )}
             </div>
           ))
@@ -669,113 +671,145 @@ export default function App() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: `linear-gradient(180deg, ${COLORS.darkOlive} 0%, #364722 35%, ${COLORS.cream} 100%)`,
     padding: 16,
-    fontFamily: "Arial, sans-serif",
     boxSizing: "border-box",
-    color: COLORS.darkOlive,
+    fontFamily: "Arial, sans-serif",
+    background: `radial-gradient(circle at top left, rgba(221,161,94,0.22), transparent 28%),
+                 radial-gradient(circle at bottom right, rgba(188,108,37,0.16), transparent 24%),
+                 linear-gradient(180deg, ${COLORS.darkOlive} 0%, #35461f 34%, ${COLORS.cream} 100%)`,
     position: "relative",
     overflowX: "hidden",
+    color: COLORS.darkOlive,
   },
-  backgroundGlowTop: {
+
+  bgShape1: {
     position: "fixed",
-    top: -120,
-    right: -80,
-    width: 260,
-    height: 260,
+    top: -80,
+    right: -60,
+    width: 220,
+    height: 220,
     borderRadius: "50%",
-    background: "rgba(221,161,94,0.18)",
-    filter: "blur(40px)",
+    background: "rgba(221,161,94,0.16)",
+    filter: "blur(36px)",
     pointerEvents: "none",
   },
-  backgroundGlowBottom: {
+  bgShape2: {
     position: "fixed",
-    bottom: -120,
+    top: 180,
     left: -80,
-    width: 260,
-    height: 260,
+    width: 180,
+    height: 180,
     borderRadius: "50%",
-    background: "rgba(188,108,37,0.12)",
-    filter: "blur(50px)",
+    background: "rgba(96,108,56,0.24)",
+    filter: "blur(36px)",
     pointerEvents: "none",
   },
+  bgShape3: {
+    position: "fixed",
+    bottom: -60,
+    right: 10,
+    width: 220,
+    height: 220,
+    borderRadius: "50%",
+    background: "rgba(188,108,37,0.14)",
+    filter: "blur(42px)",
+    pointerEvents: "none",
+  },
+
   container: {
-    maxWidth: 680,
+    maxWidth: 700,
     margin: "0 auto",
     position: "relative",
     zIndex: 1,
   },
-  heroCard: {
-    background: "rgba(254,250,224,0.12)",
+
+  hero: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 14,
+    alignItems: "flex-start",
+    background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(254,250,224,0.14)",
     borderRadius: 28,
     padding: 18,
     marginBottom: 14,
-    backdropFilter: "blur(10px)",
-    boxShadow: "0 18px 44px rgba(0,0,0,0.18)",
+    backdropFilter: "blur(12px)",
+    boxShadow: "0 22px 46px rgba(0,0,0,0.18)",
   },
-  heroTop: {
+  heroLeft: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
     gap: 12,
+    alignItems: "flex-start",
+    minWidth: 0,
   },
-  kicker: {
+  logoDot: {
+    width: 18,
+    height: 18,
+    borderRadius: "50%",
+    background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
+    boxShadow: "0 0 0 6px rgba(221,161,94,0.12)",
+    marginTop: 4,
+    flexShrink: 0,
+  },
+  brand: {
     fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: 1.2,
+    fontWeight: 800,
+    letterSpacing: 1.3,
     textTransform: "uppercase",
     color: COLORS.sand,
     marginBottom: 6,
   },
-  header: {
-    fontSize: 30,
+  heroTitle: {
+    fontSize: 28,
     fontWeight: 800,
     color: COLORS.cream,
     lineHeight: 1.05,
-    letterSpacing: 0.2,
+    marginBottom: 8,
   },
-  heroSubtext: {
-    marginTop: 10,
-    color: "rgba(254,250,224,0.82)",
+  heroText: {
     fontSize: 14,
     lineHeight: 1.45,
+    color: "rgba(254,250,224,0.82)",
+    maxWidth: 420,
   },
-  headerBtns: {
+  heroActions: {
     display: "flex",
     gap: 8,
     flexWrap: "wrap",
     justifyContent: "flex-end",
+    flexShrink: 0,
   },
-  refreshBtn: {
+
+  ghostBtn: {
     padding: "10px 12px",
     borderRadius: 14,
-    border: "1px solid rgba(254,250,224,0.16)",
-    background: "rgba(254,250,224,0.08)",
+    border: "1px solid rgba(254,250,224,0.18)",
+    background: "rgba(254,250,224,0.06)",
     color: COLORS.cream,
-    cursor: "pointer",
     fontWeight: 700,
-    boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+    cursor: "pointer",
+    boxShadow: "0 6px 14px rgba(0,0,0,0.1)",
   },
-  geoBtn: {
+  goldBtn: {
     padding: "10px 12px",
     borderRadius: 14,
-    border: `1px solid ${COLORS.sand}`,
+    border: "none",
     background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
     color: COLORS.cream,
-    cursor: "pointer",
     fontWeight: 800,
-    boxShadow: "0 10px 18px rgba(188,108,37,0.24)",
+    cursor: "pointer",
+    boxShadow: "0 12px 20px rgba(188,108,37,0.24)",
   },
-  toolsCard: {
-    background: COLORS.cream,
+
+  topTools: {
+    background: "rgba(254,250,224,0.96)",
     borderRadius: 24,
     padding: 14,
     marginBottom: 14,
-    border: `1px solid rgba(188,108,37,0.18)`,
-    boxShadow: "0 18px 36px rgba(40,54,24,0.14)",
+    border: "1px solid rgba(188,108,37,0.14)",
+    boxShadow: "0 18px 34px rgba(40,54,24,0.12)",
   },
-  routeAllBtn: {
+  bigPrimaryBtn: {
     width: "100%",
     marginBottom: 10,
     padding: "14px 16px",
@@ -786,38 +820,37 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 14px 22px rgba(40,54,24,0.22)",
+    boxShadow: "0 14px 24px rgba(40,54,24,0.2)",
   },
-  copyRouteBtn: {
+  bigSecondaryBtn: {
     width: "100%",
     padding: "14px 16px",
     borderRadius: 18,
     border: `1px solid ${COLORS.sand}`,
-    background: "#fffdf5",
+    background: COLORS.softCream,
     color: COLORS.brown,
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
     boxShadow: "0 8px 16px rgba(40,54,24,0.08)",
   },
-  tabsShell: {
+
+  tabsWrap: {
+    display: "flex",
+    gap: 8,
     background: "rgba(254,250,224,0.14)",
     borderRadius: 22,
     padding: 6,
     marginBottom: 16,
-    boxShadow: "0 12px 26px rgba(0,0,0,0.14)",
     backdropFilter: "blur(8px)",
-  },
-  tabs: {
-    display: "flex",
-    gap: 8,
+    boxShadow: "0 14px 26px rgba(0,0,0,0.14)",
   },
   tabBtn: {
     flex: 1,
     padding: "13px 14px",
     borderRadius: 16,
     border: "1px solid transparent",
-    background: "rgba(254,250,224,0.08)",
+    background: "transparent",
     color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 800,
@@ -828,197 +861,212 @@ const styles: Record<string, React.CSSProperties> = {
     color: COLORS.darkOlive,
     boxShadow: "0 10px 18px rgba(0,0,0,0.12)",
   },
-  info: {
+
+  infoBox: {
     background: COLORS.cream,
     borderRadius: 22,
     padding: 18,
-    border: `1px solid rgba(188,108,37,0.16)`,
-    color: COLORS.darkOlive,
+    border: "1px solid rgba(188,108,37,0.14)",
     boxShadow: "0 14px 28px rgba(40,54,24,0.12)",
   },
+
   card: {
-    background: "rgba(254,250,224,0.98)",
-    borderRadius: 28,
-    padding: 16,
-    marginBottom: 16,
-    border: `1px solid rgba(188,108,37,0.18)`,
-    boxShadow: "0 20px 40px rgba(40,54,24,0.14)",
-    color: COLORS.darkOlive,
+    background: "linear-gradient(180deg, rgba(254,250,224,0.99) 0%, rgba(250,245,226,0.98) 100%)",
+    borderRadius: 30,
+    padding: 18,
+    marginBottom: 18,
+    border: "1px solid rgba(188,108,37,0.16)",
+    boxShadow:
+      "0 24px 44px rgba(40,54,24,0.14), inset 0 1px 0 rgba(255,255,255,0.5)",
   },
-  cardTop: {
+
+  cardHeader: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
+    gap: 14,
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
-  cardBadge: {
+  cardHeaderLeft: {
+    minWidth: 0,
+  },
+  orderPill: {
     display: "inline-flex",
-    alignItems: "center",
     padding: "6px 10px",
     borderRadius: 999,
     fontSize: 12,
     fontWeight: 800,
-    letterSpacing: 0.6,
+    letterSpacing: 0.9,
     textTransform: "uppercase",
-    background: "rgba(96,108,56,0.1)",
     color: COLORS.olive,
+    background: "rgba(96,108,56,0.12)",
+    marginBottom: 10,
   },
-  cardWeek: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: COLORS.brown,
-  },
-  cardTitleRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    fontSize: 28,
+  orderNumber: {
+    fontSize: 34,
     fontWeight: 800,
     color: COLORS.darkOlive,
     lineHeight: 1,
+    marginBottom: 6,
   },
-  cardPrice: {
-    fontSize: 22,
+  orderDate: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: COLORS.brown,
+  },
+  priceBadge: {
+    padding: "12px 16px",
+    borderRadius: 20,
+    background: `linear-gradient(180deg, rgba(221,161,94,0.18) 0%, rgba(188,108,37,0.1) 100%)`,
+    border: "1px solid rgba(188,108,37,0.18)",
+    fontSize: 28,
     fontWeight: 800,
     color: COLORS.brown,
     whiteSpace: "nowrap",
+    boxShadow: "0 10px 18px rgba(188,108,37,0.08)",
   },
-  metaGrid: {
+
+  quickGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
     marginBottom: 12,
   },
-  metaItem: {
-    background: "#fffdf6",
-    borderRadius: 18,
-    padding: 12,
-    border: `1px solid rgba(221,161,94,0.3)`,
+  quickItem: {
+    padding: 14,
+    borderRadius: 20,
+    background: "rgba(255,255,255,0.58)",
+    border: "1px solid rgba(221,161,94,0.24)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
   },
-  metaLabel: {
+  quickLabel: {
     fontSize: 12,
-    fontWeight: 700,
-    textTransform: "uppercase",
+    fontWeight: 800,
     letterSpacing: 0.8,
+    textTransform: "uppercase",
     color: COLORS.olive,
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  metaValue: {
-    fontSize: 15,
+  quickValue: {
+    fontSize: 18,
     fontWeight: 700,
     color: COLORS.darkOlive,
     lineHeight: 1.35,
     wordBreak: "break-word",
   },
-  addressPanel: {
-    marginTop: 2,
+
+  addressBox: {
     marginBottom: 12,
-    padding: 14,
-    borderRadius: 20,
-    background: `linear-gradient(180deg, rgba(221,161,94,0.12) 0%, rgba(254,250,224,0.8) 100%)`,
-    border: `1px solid rgba(221,161,94,0.35)`,
+    padding: 16,
+    borderRadius: 22,
+    background:
+      "linear-gradient(180deg, rgba(221,161,94,0.12) 0%, rgba(254,250,224,0.82) 100%)",
+    border: "1px solid rgba(221,161,94,0.3)",
+    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
   },
-  addressValue: {
-    fontSize: 16,
-    fontWeight: 700,
-    lineHeight: 1.45,
-    color: COLORS.darkOlive,
+  sectionCard: {
+    marginTop: 10,
+    padding: 16,
+    borderRadius: 22,
+    background: "rgba(255,255,255,0.42)",
+    border: "1px solid rgba(221,161,94,0.24)",
+    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
   },
-  panelLabel: {
+  notesCard: {
+    marginTop: 10,
+    padding: 16,
+    borderRadius: 22,
+    background: "linear-gradient(180deg, rgba(221,161,94,0.14) 0%, rgba(255,245,232,0.76) 100%)",
+    border: "1px solid rgba(188,108,37,0.28)",
+    boxShadow: "0 8px 16px rgba(188,108,37,0.06)",
+  },
+  coordsCard: {
+    marginTop: 12,
+    padding: 16,
+    borderRadius: 22,
+    background: "rgba(255,255,255,0.38)",
+    border: "1px solid rgba(221,161,94,0.22)",
+    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
+  },
+
+  sectionLabel: {
     fontSize: 12,
     fontWeight: 800,
-    textTransform: "uppercase",
     letterSpacing: 0.9,
+    textTransform: "uppercase",
     color: COLORS.olive,
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  panelText: {
-    whiteSpace: "pre-wrap",
-    fontSize: 15,
-    lineHeight: 1.45,
+  addressText: {
+    fontSize: 20,
+    fontWeight: 700,
+    lineHeight: 1.4,
     color: COLORS.darkOlive,
   },
-  itemsBox: {
-    marginTop: 10,
-    padding: 14,
-    borderRadius: 20,
-    background: "#f8f2dc",
-    border: `1px solid rgba(221,161,94,0.28)`,
+  sectionText: {
+    fontSize: 15,
+    lineHeight: 1.5,
+    color: COLORS.darkOlive,
+    whiteSpace: "pre-wrap",
   },
-  notesBox: {
-    marginTop: 10,
-    padding: 14,
-    borderRadius: 20,
-    background: "#f8ead7",
-    border: `1px solid rgba(188,108,37,0.32)`,
-  },
-  coordsBox: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 20,
-    background: "#f4efd9",
-    border: `1px solid rgba(221,161,94,0.24)`,
-  },
-  coordRow: {
+
+  coordLine: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: 12,
     marginBottom: 8,
-    fontSize: 14,
-    lineHeight: 1.4,
   },
-  coordKey: {
+  coordName: {
+    fontSize: 13,
     fontWeight: 800,
+    letterSpacing: 0.8,
     color: COLORS.olive,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
-  coordValue: {
+  coordNum: {
+    fontSize: 16,
     fontWeight: 700,
     color: COLORS.darkOlive,
-    textAlign: "right",
     wordBreak: "break-all",
+    textAlign: "right",
   },
-  geoHint: {
-    marginTop: 6,
+  geoText: {
+    marginTop: 8,
     fontSize: 13,
     lineHeight: 1.4,
     color: COLORS.brown,
   },
-  actions: {
+
+  actionsGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
-    marginTop: 14,
+    marginTop: 16,
   },
-  primaryActionBtn: {
-    padding: "12px 14px",
-    borderRadius: 16,
+  callBtn: {
+    padding: "13px 14px",
+    borderRadius: 18,
     border: "none",
-    background: `linear-gradient(180deg, ${COLORS.brown} 0%, #9f561d 100%)`,
+    background: `linear-gradient(180deg, ${COLORS.brown} 0%, #9f581f 100%)`,
     color: COLORS.cream,
     cursor: "pointer",
     fontWeight: 800,
-    boxShadow: "0 12px 18px rgba(188,108,37,0.22)",
+    fontSize: 15,
+    boxShadow: "0 14px 20px rgba(188,108,37,0.2)",
   },
-  secondaryActionBtn: {
-    padding: "12px 14px",
-    borderRadius: 16,
-    border: `1px solid rgba(221,161,94,0.45)`,
-    background: "#fffdf6",
+  lightBtn: {
+    padding: "13px 14px",
+    borderRadius: 18,
+    border: "1px solid rgba(221,161,94,0.42)",
+    background: COLORS.softCream,
     color: COLORS.darkOlive,
     cursor: "pointer",
     fontWeight: 800,
-    boxShadow: "0 6px 12px rgba(40,54,24,0.06)",
+    fontSize: 15,
+    boxShadow: "0 8px 14px rgba(40,54,24,0.06)",
   },
-  doneBtn: {
-    marginTop: 14,
-    width: "100%",
-    padding: "14px 16px",
+  darkBtn: {
+    padding: "13px 14px",
     borderRadius: 18,
     border: "none",
     background: `linear-gradient(180deg, ${COLORS.olive} 0%, ${COLORS.darkOlive} 100%)`,
@@ -1026,17 +1074,32 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 14px 22px rgba(40,54,24,0.22)",
+    boxShadow: "0 14px 20px rgba(40,54,24,0.18)",
   },
-  archiveLabel: {
-    marginTop: 14,
+
+  doneBtn: {
+    marginTop: 16,
     width: "100%",
-    padding: "13px 14px",
-    borderRadius: 18,
+    padding: "14px 16px",
+    borderRadius: 20,
+    border: "none",
+    background: `linear-gradient(180deg, ${COLORS.olive} 0%, ${COLORS.darkOlive} 100%)`,
+    color: COLORS.cream,
+    cursor: "pointer",
+    fontWeight: 800,
+    fontSize: 16,
+    boxShadow: "0 16px 24px rgba(40,54,24,0.2)",
+  },
+  archiveBadge: {
+    marginTop: 16,
+    width: "100%",
+    padding: "14px 16px",
+    borderRadius: 20,
     background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
     color: COLORS.cream,
     fontWeight: 800,
+    fontSize: 15,
     textAlign: "center",
-    boxShadow: "0 12px 18px rgba(188,108,37,0.2)",
+    boxShadow: "0 14px 20px rgba(188,108,37,0.18)",
   },
 };
