@@ -22,6 +22,14 @@ type Order = {
   geocodedAddress?: string;
 };
 
+const COLORS = {
+  olive: "#606c38",
+  darkOlive: "#283618",
+  cream: "#fefae0",
+  sand: "#dda15e",
+  brown: "#bc6c25",
+};
+
 export default function App() {
   const [tab, setTab] = useState<"active" | "archive">("active");
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -318,14 +326,14 @@ export default function App() {
   }
 
   function formatMoney(value: unknown) {
-  const n = Number(value);
+    const n = Number(value);
 
-  if (!Number.isFinite(n)) return "0 ₽";
+    if (!Number.isFinite(n)) return "0 ₽";
 
-  const rounded = Math.round(n);
+    const rounded = Math.round(n);
 
-  return `${rounded.toLocaleString("ru-RU")} ₽`;
-}
+    return `${rounded.toLocaleString("ru-RU")} ₽`;
+  }
 
   async function copySingleClientRoute(order: Order) {
     const lat = parseCoord(order.lat);
@@ -642,10 +650,11 @@ export default function App() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f5f7fb",
+    background: `linear-gradient(180deg, ${COLORS.cream} 0%, #f7f1d5 100%)`,
     padding: 16,
     fontFamily: "Arial, sans-serif",
     boxSizing: "border-box",
+    color: COLORS.darkOlive,
   },
   container: {
     maxWidth: 640,
@@ -660,7 +669,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   header: {
     fontSize: 28,
-    fontWeight: 700,
+    fontWeight: 800,
+    color: COLORS.darkOlive,
+    letterSpacing: 0.3,
   },
   headerBtns: {
     display: "flex",
@@ -668,43 +679,49 @@ const styles: Record<string, React.CSSProperties> = {
   },
   refreshBtn: {
     padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #cfd6e4",
-    background: "#fff",
+    borderRadius: 12,
+    border: `1px solid ${COLORS.sand}`,
+    background: COLORS.cream,
+    color: COLORS.darkOlive,
     cursor: "pointer",
     fontWeight: 700,
+    boxShadow: "0 2px 8px rgba(40,54,24,0.08)",
   },
   geoBtn: {
     padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #cfd6e4",
-    background: "#fff",
+    borderRadius: 12,
+    border: `1px solid ${COLORS.brown}`,
+    background: COLORS.sand,
+    color: COLORS.darkOlive,
     cursor: "pointer",
     fontWeight: 700,
+    boxShadow: "0 2px 8px rgba(40,54,24,0.1)",
   },
   routeAllBtn: {
     width: "100%",
     marginBottom: 10,
-    padding: "12px 14px",
-    borderRadius: 12,
+    padding: "13px 14px",
+    borderRadius: 16,
     border: "none",
-    background: "#111827",
-    color: "#fff",
+    background: COLORS.darkOlive,
+    color: COLORS.cream,
     cursor: "pointer",
-    fontWeight: 700,
+    fontWeight: 800,
     fontSize: 15,
+    boxShadow: "0 8px 18px rgba(40,54,24,0.18)",
   },
   copyRouteBtn: {
     width: "100%",
     marginBottom: 12,
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #cfd6e4",
-    background: "#fff",
-    color: "#111827",
+    padding: "13px 14px",
+    borderRadius: 16,
+    border: `1px solid ${COLORS.sand}`,
+    background: COLORS.cream,
+    color: COLORS.brown,
     cursor: "pointer",
-    fontWeight: 700,
+    fontWeight: 800,
     fontSize: 15,
+    boxShadow: "0 4px 12px rgba(40,54,24,0.08)",
   },
   tabs: {
     display: "flex",
@@ -714,63 +731,73 @@ const styles: Record<string, React.CSSProperties> = {
   tabBtn: {
     flex: 1,
     padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #cfd6e4",
-    background: "#fff",
+    borderRadius: 16,
+    border: `1px solid ${COLORS.sand}`,
+    background: COLORS.cream,
+    color: COLORS.darkOlive,
     cursor: "pointer",
-    fontWeight: 700,
+    fontWeight: 800,
+    boxShadow: "0 4px 10px rgba(40,54,24,0.06)",
   },
   tabBtnActive: {
-    background: "#1f6feb",
-    color: "#fff",
-    border: "1px solid #1f6feb",
+    background: COLORS.olive,
+    color: COLORS.cream,
+    border: `1px solid ${COLORS.olive}`,
+    boxShadow: "0 8px 18px rgba(96,108,56,0.22)",
   },
   info: {
-    background: "#fff",
-    borderRadius: 14,
+    background: COLORS.cream,
+    borderRadius: 18,
     padding: 18,
-    border: "1px solid #e2e8f0",
+    border: `1px solid ${COLORS.sand}`,
+    color: COLORS.darkOlive,
+    boxShadow: "0 8px 18px rgba(40,54,24,0.08)",
   },
   card: {
-    background: "#fff",
-    borderRadius: 16,
+    background: "rgba(254, 250, 224, 0.96)",
+    borderRadius: 22,
     padding: 16,
     marginBottom: 14,
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 6px 20px rgba(0,0,0,0.05)",
+    border: `1px solid ${COLORS.sand}`,
+    boxShadow: "0 10px 24px rgba(40,54,24,0.12)",
+    color: COLORS.darkOlive,
   },
   row: {
     marginBottom: 8,
     fontSize: 15,
     lineHeight: 1.45,
+    color: COLORS.darkOlive,
   },
   itemsBox: {
     marginTop: 10,
     padding: 12,
-    borderRadius: 12,
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
+    borderRadius: 16,
+    background: "#f7f1d5",
+    border: `1px solid ${COLORS.sand}`,
     fontSize: 14,
+    color: COLORS.darkOlive,
   },
   notesBox: {
     marginTop: 10,
     padding: 12,
-    borderRadius: 12,
-    background: "#fff7ed",
-    border: "1px solid #fed7aa",
+    borderRadius: 16,
+    background: "#fae6cb",
+    border: `1px solid ${COLORS.brown}`,
     fontSize: 14,
+    color: COLORS.darkOlive,
   },
   coordsBox: {
     marginTop: 10,
     padding: 12,
-    borderRadius: 12,
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
+    borderRadius: 16,
+    background: "#f3ecd0",
+    border: `1px solid ${COLORS.sand}`,
   },
   coordRow: {
     marginBottom: 6,
     fontSize: 14,
     lineHeight: 1.4,
+    color: COLORS.darkOlive,
   },
   actions: {
     display: "flex",
@@ -780,32 +807,36 @@ const styles: Record<string, React.CSSProperties> = {
   },
   actionBtn: {
     padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #cfd6e4",
-    background: "#fff",
+    borderRadius: 12,
+    border: `1px solid ${COLORS.sand}`,
+    background: COLORS.cream,
+    color: COLORS.darkOlive,
     cursor: "pointer",
-    fontWeight: 600,
+    fontWeight: 700,
+    boxShadow: "0 2px 8px rgba(40,54,24,0.06)",
   },
   doneBtn: {
     marginTop: 14,
     width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
+    padding: "13px 14px",
+    borderRadius: 16,
     border: "none",
-    background: "#16a34a",
-    color: "#fff",
+    background: COLORS.brown,
+    color: COLORS.cream,
     cursor: "pointer",
-    fontWeight: 700,
+    fontWeight: 800,
     fontSize: 15,
+    boxShadow: "0 8px 18px rgba(188,108,37,0.24)",
   },
   archiveLabel: {
     marginTop: 14,
     width: "100%",
     padding: "12px 14px",
-    borderRadius: 12,
-    background: "#e5e7eb",
-    color: "#374151",
-    fontWeight: 700,
+    borderRadius: 16,
+    background: COLORS.sand,
+    color: COLORS.darkOlive,
+    fontWeight: 800,
     textAlign: "center",
+    boxShadow: "0 6px 14px rgba(221,161,94,0.2)",
   },
 };
