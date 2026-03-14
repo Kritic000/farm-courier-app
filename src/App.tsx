@@ -117,9 +117,10 @@ export default function App() {
     window.location.href = `tel:${cleanPhone}`;
   }
 
-  function openTelegram(username?: string, userId?: string) {
+  function openTelegramOrCall(username?: string, userId?: string, phone?: string) {
     const cleanUsername = String(username || "").replace(/^@/, "").trim();
     const cleanUserId = String(userId || "").trim();
+    const cleanPhone = String(phone || "").trim();
 
     if (cleanUsername) {
       openExternalLink(`https://t.me/${cleanUsername}`);
@@ -131,7 +132,12 @@ export default function App() {
       return;
     }
 
-    alert("У клиента не указан Telegram username или tgUserId");
+    if (cleanPhone) {
+      window.location.href = `tel:${cleanPhone}`;
+      return;
+    }
+
+    alert("У клиента не указан Telegram и телефон");
   }
 
   async function markDone(orderId: string) {
@@ -188,7 +194,7 @@ export default function App() {
       }
 
       alert(
-        `Координаты обновлены.\nОбработано: ${data?.updated || 0}\nНе найдено: ${data?.failed || 0}`
+        `Координаты обновлены.\nОбработано: ${data?.updated || 0}\nНе найдено: ${data?.failed || 0}\nПропущено: ${data?.skipped || 0}`
       );
 
       await loadOrders();
@@ -317,6 +323,19 @@ export default function App() {
     return d.toLocaleDateString("ru-RU");
   }
 
+  function formatMoney(value: unknown) {
+    const n = Number(value);
+
+    if (!Number.isFinite(n)) return "0 ₽";
+
+    const rounded = Math.round(n * 100) / 100;
+
+    return `${rounded.toLocaleString("ru-RU", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })} ₽`;
+  }
+
   async function copySingleClientRoute(order: Order) {
     const lat = parseCoord(order.lat);
     const lon = parseCoord(order.lon);
@@ -330,6 +349,7 @@ export default function App() {
 
     try {
       const pos = await getCurrentPosition();
+
       const url = buildYandexWebRouteUrl([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
@@ -548,7 +568,7 @@ export default function App() {
               </div>
 
               <div style={styles.row}>
-                <b>Сумма:</b> {o.total || 0} ₽
+                <b>Сумма:</b> {formatMoney(o.total)}
               </div>
 
               {o.itemsText ? (
@@ -590,9 +610,9 @@ export default function App() {
 
                 <button
                   style={styles.actionBtn}
-                  onClick={() => openTelegram(o.tgUsername, o.tgUserId)}
+                  onClick={() => openTelegramOrCall(o.tgUsername, o.tgUserId, o.phone)}
                 >
-                  Telegram
+                  Telegram / звонок
                 </button>
 
                 <button
