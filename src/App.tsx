@@ -143,7 +143,7 @@ export default function App() {
     alert("У клиента не указан Telegram");
   }
 
-  async function markDone(orderId: string) {
+  async function markDone(order: Order) {
     const ok = window.confirm("Отметить заказ как доставленный?");
     if (!ok) return;
 
@@ -156,7 +156,8 @@ export default function App() {
         body: JSON.stringify({
           token: API_TOKEN,
           action: "completeOrder",
-          orderId,
+          orderId: order.orderId,
+          createdAt: order.createdAt,
         }),
       });
 
@@ -648,7 +649,7 @@ export default function App() {
               {tab === "active" ? (
                 <button
                   style={styles.doneBtn}
-                  onClick={() => markDone(o.orderId)}
+                  onClick={() => markDone(o)}
                 >
                   ✅ Доставлено
                 </button>
