@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbymAbevJgc3eeMBkWAfssVnz9w7-FBhp05VOhhegFArqi53IsgrtNyCpqm73VmcQyQ/exec";
+  "https://script.google.com/macros/s/AKfycbwa-eFSQiWdjAi3Aw9wVC2DjuZrOhcPT4PZnzPNbKutBqoEKhpNpCtARdPFup4o3YM/exec";
 const API_TOKEN = "Kjhytccb18@";
 
 type Order = {
@@ -12,7 +12,9 @@ type Order = {
   tgUserId?: string;
   tgUsername?: string;
   address: string;
+  normalizedAddress?: string;
   itemsText?: string;
+  notes?: string;
   total: number;
   status?: string;
   lat?: string;
@@ -21,9 +23,9 @@ type Order = {
 };
 
 export default function App() {
-  const [tab, setTab] = useState<"active" | "done">("active");
+  const [tab, setTab] = useState<"active" | "archive">("active");
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
-  const [doneOrders, setDoneOrders] = useState<Order[]>([]);
+  const [archiveOrders, setArchiveOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [buildingRoute, setBuildingRoute] = useState(false);
@@ -44,7 +46,7 @@ export default function App() {
       if (tab === "active") {
         setActiveOrders(Array.isArray(data.orders) ? data.orders : []);
       } else {
-        setDoneOrders(Array.isArray(data.orders) ? data.orders : []);
+        setArchiveOrders(Array.isArray(data.orders) ? data.orders : []);
       }
     } catch (e) {
       console.error(e);
@@ -194,6 +196,7 @@ export default function App() {
       alert(
         `Координаты обновлены.\nОбработано: ${data?.updated || 0}\nНе найдено: ${data?.failed || 0}`
       );
+
       await loadOrders();
     } catch (e) {
       console.error(e);
@@ -311,6 +314,15 @@ export default function App() {
     openExternalLink(webUrl);
   }
 
+  function formatWeekLabel(createdAt?: string) {
+    if (!createdAt) return "—";
+
+    const d = new Date(createdAt);
+    if (Number.isNaN(d.getTime())) return createdAt;
+
+    return d.toLocaleDateString("ru-RU");
+  }
+
   async function copySingleClientRoute(order: Order) {
     const lat = parseCoord(order.lat);
     const lon = parseCoord(order.lon);
@@ -324,6 +336,7 @@ export default function App() {
 
     try {
       const pos = await getCurrentPosition();
+
       const url = buildYandexWebRouteUrl([
         { lat: pos.lat, lon: pos.lon },
         { lat: lat!, lon: lon! },
@@ -342,7 +355,31 @@ export default function App() {
     }
   }
 
-  const orders = tab === "active" ? activeOrders : doneOrders;
+  async function openSingleClientRoute(order: Order) {
+    const lat = parseCoord(order.lat);
+    const lon = parseCoord(order.lon);
+
+    if (!isValidLatLon(lat, lon)) {
+      alert(
+        "У этого заказа ещё нет корректных координат. Сначала нажми '📍 Координаты'."
+      );
+      return;
+    }
+
+    try {
+      const pos = await getCurrentPosition();
+
+      openYandexRoute([
+        { lat: pos.lat, lon: pos.lon },
+        { lat: lat!, lon: lon! },
+      ]);
+    } catch (e) {
+      console.error(e);
+      alert("Не удалось получить текущее местоположение");
+    }
+  }
+
+  const orders = tab === "active" ? activeOrders : archiveOrders;
 
   const activeOrdersWithCoords = useMemo(() => {
     return activeOrders.filter((o) => {
@@ -478,11 +515,11 @@ export default function App() {
           <button
             style={{
               ...styles.tabBtn,
-              ...(tab === "done" ? styles.tabBtnActive : {}),
+              ...(tab === "archive" ? styles.tabBtnActive : {}),
             }}
-            onClick={() => setTab("done")}
+            onClick={() => setTab("archive")}
           >
-            Доставленные
+            Архив
           </button>
         </div>
 
@@ -491,14 +528,18 @@ export default function App() {
         ) : orders.length === 0 ? (
           <div style={styles.info}>
             {tab === "active"
-              ? "Активных заказов пока нет"
-              : "Доставленных заказов пока нет"}
+              ? "Активных заказов на текущую неделю нет"
+              : "Архив пока пуст"}
           </div>
         ) : (
-          orders.map((o) => (
-            <div key={o.orderId} style={styles.card}>
+          orders.map((o, index) => (
+            <div key={`${o.orderId}-${o.createdAt || ""}-${index}`} style={styles.card}>
               <div style={styles.row}>
-                <b>Заказ:</b> {o.orderId}
+                <b>Неделя:</b> {formatWeekLabel(o.createdAt)}
+              </div>
+
+              <div style={styles.row}>
+                <b>Заказ №:</b> {o.orderId || "—"}
               </div>
 
               <div style={styles.row}>
@@ -517,20 +558,6 @@ export default function App() {
                 <b>Сумма:</b> {o.total || 0} ₽
               </div>
 
-              <div style={styles.row}>
-                <b>lat:</b> {o.lat || "—"}
-              </div>
-
-              <div style={styles.row}>
-                <b>lon:</b> {o.lon || "—"}
-              </div>
-
-              {o.geocodedAddress ? (
-                <div style={styles.row}>
-                  <b>Геокод найден как:</b> {o.geocodedAddress}
-                </div>
-              ) : null}
-
               {o.itemsText ? (
                 <div style={styles.itemsBox}>
                   <b>Состав заказа:</b>
@@ -539,6 +566,29 @@ export default function App() {
                   </div>
                 </div>
               ) : null}
+
+              {o.notes ? (
+                <div style={styles.notesBox}>
+                  <b>Примечание:</b>
+                  <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
+                    {o.notes}
+                  </div>
+                </div>
+              ) : null}
+
+              <div style={styles.coordsBox}>
+                <div style={styles.coordRow}>
+                  <b>lat:</b> {o.lat || "—"}
+                </div>
+                <div style={styles.coordRow}>
+                  <b>lon:</b> {o.lon || "—"}
+                </div>
+                {o.geocodedAddress ? (
+                  <div style={styles.coordRow}>
+                    <b>Геокод найден как:</b> {o.geocodedAddress}
+                  </div>
+                ) : null}
+              </div>
 
               <div style={styles.actions}>
                 <button style={styles.actionBtn} onClick={() => call(o.phone)}>
@@ -575,7 +625,7 @@ export default function App() {
                   ✅ Доставлено
                 </button>
               ) : (
-                <div style={styles.doneLabel}>Доставлено</div>
+                <div style={styles.archiveLabel}>В архиве</div>
               )}
             </div>
           ))
@@ -698,6 +748,26 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #e2e8f0",
     fontSize: 14,
   },
+  notesBox: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    background: "#fff7ed",
+    border: "1px solid #fed7aa",
+    fontSize: 14,
+  },
+  coordsBox: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+  },
+  coordRow: {
+    marginBottom: 6,
+    fontSize: 14,
+    lineHeight: 1.4,
+  },
   actions: {
     display: "flex",
     flexWrap: "wrap",
@@ -724,13 +794,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 15,
   },
-  doneLabel: {
+  archiveLabel: {
     marginTop: 14,
     width: "100%",
     padding: "12px 14px",
     borderRadius: 12,
-    background: "#dcfce7",
-    color: "#166534",
+    background: "#e5e7eb",
+    color: "#374151",
     fontWeight: 700,
     textAlign: "center",
   },
