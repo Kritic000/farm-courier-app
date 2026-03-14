@@ -312,8 +312,47 @@ export default function App() {
     return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
   }
 
+  function buildYandexAppRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `yandexmaps://maps.yandex.ru/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
+  }
+
+  function buildYandexIntentRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return (
+      `intent://maps.yandex.ru/?rtext=${encodeURIComponent(routeText)}&rtt=auto` +
+      `#Intent;scheme=yandexmaps;package=ru.yandex.yandexmaps;end`
+    );
+  }
+
+  function openRawUrl(url: string) {
+    try {
+      window.location.href = url;
+    } catch (e) {
+      console.error("openRawUrl failed:", e);
+    }
+  }
+
   function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const appUrl = buildYandexAppRouteUrl(points);
+    const intentUrl = buildYandexIntentRouteUrl(points);
     const webUrl = buildYandexWebRouteUrl(points);
+
+    if (isAndroid) {
+      openRawUrl(appUrl);
+
+      setTimeout(() => {
+        openRawUrl(intentUrl);
+      }, 500);
+
+      setTimeout(() => {
+        openExternalLink(webUrl);
+      }, 1300);
+
+      return;
+    }
+
     openExternalLink(webUrl);
   }
 
