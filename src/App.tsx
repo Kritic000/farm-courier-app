@@ -29,8 +29,6 @@ const COLORS = {
   sand: "#dda15e",
   brown: "#bc6c25",
   softCream: "#fffaf0",
-  mist: "rgba(254, 250, 224, 0.72)",
-  glass: "rgba(254, 250, 224, 0.12)",
 };
 
 export default function App() {
@@ -475,20 +473,17 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.bgShape1} />
       <div style={styles.bgShape2} />
-      <div style={styles.bgShape3} />
 
       <div style={styles.container}>
         <div style={styles.hero}>
-          <div style={styles.heroLeft}>
-            <div style={styles.logoDot} />
-            <div>
+          <div style={styles.heroTop}>
+            <div style={styles.brandRow}>
+              <div style={styles.logoDot} />
               <div style={styles.brand}>Farm Courier</div>
-              <div style={styles.heroTitle}>Управление доставками</div>
-              <div style={styles.heroText}>
-                Активные заказы, маршрут, связь с клиентом и архив — всё в одном месте.
-              </div>
             </div>
           </div>
+
+          <div style={styles.heroTitle}>Доставки</div>
 
           <div style={styles.heroActions}>
             <button style={styles.ghostBtn} onClick={loadOrders}>
@@ -674,9 +669,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 16,
     boxSizing: "border-box",
     fontFamily: "Arial, sans-serif",
-    background: `radial-gradient(circle at top left, rgba(221,161,94,0.22), transparent 28%),
-                 radial-gradient(circle at bottom right, rgba(188,108,37,0.16), transparent 24%),
-                 linear-gradient(180deg, ${COLORS.darkOlive} 0%, #35461f 34%, ${COLORS.cream} 100%)`,
+    background: `radial-gradient(circle at top left, rgba(221,161,94,0.18), transparent 26%),
+                 linear-gradient(180deg, ${COLORS.darkOlive} 0%, #364722 34%, ${COLORS.cream} 100%)`,
     position: "relative",
     overflowX: "hidden",
     color: COLORS.darkOlive,
@@ -684,35 +678,24 @@ const styles: Record<string, React.CSSProperties> = {
 
   bgShape1: {
     position: "fixed",
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
+    top: -60,
+    right: -40,
+    width: 180,
+    height: 180,
     borderRadius: "50%",
-    background: "rgba(221,161,94,0.16)",
-    filter: "blur(36px)",
+    background: "rgba(221,161,94,0.14)",
+    filter: "blur(34px)",
     pointerEvents: "none",
   },
   bgShape2: {
     position: "fixed",
-    top: 180,
-    left: -80,
+    bottom: -80,
+    left: -60,
     width: 180,
     height: 180,
     borderRadius: "50%",
-    background: "rgba(96,108,56,0.24)",
+    background: "rgba(188,108,37,0.12)",
     filter: "blur(36px)",
-    pointerEvents: "none",
-  },
-  bgShape3: {
-    position: "fixed",
-    bottom: -60,
-    right: 10,
-    width: 220,
-    height: 220,
-    borderRadius: "50%",
-    background: "rgba(188,108,37,0.14)",
-    filter: "blur(42px)",
     pointerEvents: "none",
   },
 
@@ -724,63 +707,56 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   hero: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 14,
-    alignItems: "flex-start",
     background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(254,250,224,0.14)",
     borderRadius: 28,
-    padding: 18,
+    padding: 16,
     marginBottom: 14,
     backdropFilter: "blur(12px)",
-    boxShadow: "0 22px 46px rgba(0,0,0,0.18)",
+    boxShadow: "0 18px 38px rgba(0,0,0,0.18)",
   },
-  heroLeft: {
+  heroTop: {
     display: "flex",
-    gap: 12,
-    alignItems: "flex-start",
-    minWidth: 0,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  brandRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
   },
   logoDot: {
-    width: 18,
-    height: 18,
+    width: 14,
+    height: 14,
     borderRadius: "50%",
     background: `linear-gradient(180deg, ${COLORS.sand} 0%, ${COLORS.brown} 100%)`,
     boxShadow: "0 0 0 6px rgba(221,161,94,0.12)",
-    marginTop: 4,
     flexShrink: 0,
   },
   brand: {
     fontSize: 12,
     fontWeight: 800,
-    letterSpacing: 1.3,
+    letterSpacing: 1.2,
     textTransform: "uppercase",
     color: COLORS.sand,
-    marginBottom: 6,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 800,
     color: COLORS.cream,
     lineHeight: 1.05,
-    marginBottom: 8,
-  },
-  heroText: {
-    fontSize: 14,
-    lineHeight: 1.45,
-    color: "rgba(254,250,224,0.82)",
-    maxWidth: 420,
+    marginBottom: 12,
   },
   heroActions: {
     display: "flex",
     gap: 8,
     flexWrap: "wrap",
-    justifyContent: "flex-end",
-    flexShrink: 0,
   },
 
   ghostBtn: {
+    flex: 1,
+    minWidth: 120,
     padding: "10px 12px",
     borderRadius: 14,
     border: "1px solid rgba(254,250,224,0.18)",
@@ -791,6 +767,8 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 6px 14px rgba(0,0,0,0.1)",
   },
   goldBtn: {
+    flex: 1,
+    minWidth: 140,
     padding: "10px 12px",
     borderRadius: 14,
     border: "none",
@@ -802,12 +780,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   topTools: {
-    background: "rgba(254,250,224,0.96)",
+    background: "rgba(254,250,224,0.97)",
     borderRadius: 24,
     padding: 14,
     marginBottom: 14,
     border: "1px solid rgba(188,108,37,0.14)",
-    boxShadow: "0 18px 34px rgba(40,54,24,0.12)",
+    boxShadow: "0 16px 30px rgba(40,54,24,0.12)",
   },
   bigPrimaryBtn: {
     width: "100%",
@@ -820,7 +798,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 14px 24px rgba(40,54,24,0.2)",
+    boxShadow: "0 12px 22px rgba(40,54,24,0.18)",
   },
   bigSecondaryBtn: {
     width: "100%",
@@ -832,7 +810,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 8px 16px rgba(40,54,24,0.08)",
+    boxShadow: "0 8px 14px rgba(40,54,24,0.08)",
   },
 
   tabsWrap: {
@@ -843,7 +821,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 6,
     marginBottom: 16,
     backdropFilter: "blur(8px)",
-    boxShadow: "0 14px 26px rgba(0,0,0,0.14)",
+    boxShadow: "0 12px 22px rgba(0,0,0,0.14)",
   },
   tabBtn: {
     flex: 1,
@@ -859,7 +837,7 @@ const styles: Record<string, React.CSSProperties> = {
   tabBtnActive: {
     background: COLORS.cream,
     color: COLORS.darkOlive,
-    boxShadow: "0 10px 18px rgba(0,0,0,0.12)",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
   },
 
   infoBox: {
@@ -867,7 +845,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 22,
     padding: 18,
     border: "1px solid rgba(188,108,37,0.14)",
-    boxShadow: "0 14px 28px rgba(40,54,24,0.12)",
+    boxShadow: "0 14px 24px rgba(40,54,24,0.12)",
   },
 
   card: {
@@ -876,8 +854,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 18,
     marginBottom: 18,
     border: "1px solid rgba(188,108,37,0.16)",
-    boxShadow:
-      "0 24px 44px rgba(40,54,24,0.14), inset 0 1px 0 rgba(255,255,255,0.5)",
+    boxShadow: "0 20px 36px rgba(40,54,24,0.14)",
   },
 
   cardHeader: {
@@ -896,7 +873,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 999,
     fontSize: 12,
     fontWeight: 800,
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
     color: COLORS.olive,
     background: "rgba(96,108,56,0.12)",
@@ -923,7 +900,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     color: COLORS.brown,
     whiteSpace: "nowrap",
-    boxShadow: "0 10px 18px rgba(188,108,37,0.08)",
+    boxShadow: "0 8px 16px rgba(188,108,37,0.08)",
   },
 
   quickGrid: {
@@ -935,9 +912,8 @@ const styles: Record<string, React.CSSProperties> = {
   quickItem: {
     padding: 14,
     borderRadius: 20,
-    background: "rgba(255,255,255,0.58)",
+    background: "rgba(255,255,255,0.56)",
     border: "1px solid rgba(221,161,94,0.24)",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
   },
   quickLabel: {
     fontSize: 12,
@@ -962,7 +938,6 @@ const styles: Record<string, React.CSSProperties> = {
     background:
       "linear-gradient(180deg, rgba(221,161,94,0.12) 0%, rgba(254,250,224,0.82) 100%)",
     border: "1px solid rgba(221,161,94,0.3)",
-    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
   },
   sectionCard: {
     marginTop: 10,
@@ -970,7 +945,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 22,
     background: "rgba(255,255,255,0.42)",
     border: "1px solid rgba(221,161,94,0.24)",
-    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
   },
   notesCard: {
     marginTop: 10,
@@ -978,7 +952,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 22,
     background: "linear-gradient(180deg, rgba(221,161,94,0.14) 0%, rgba(255,245,232,0.76) 100%)",
     border: "1px solid rgba(188,108,37,0.28)",
-    boxShadow: "0 8px 16px rgba(188,108,37,0.06)",
   },
   coordsCard: {
     marginTop: 12,
@@ -986,7 +959,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 22,
     background: "rgba(255,255,255,0.38)",
     border: "1px solid rgba(221,161,94,0.22)",
-    boxShadow: "0 8px 16px rgba(40,54,24,0.05)",
   },
 
   sectionLabel: {
@@ -1052,7 +1024,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 14px 20px rgba(188,108,37,0.2)",
+    boxShadow: "0 12px 18px rgba(188,108,37,0.18)",
   },
   lightBtn: {
     padding: "13px 14px",
@@ -1074,7 +1046,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 15,
-    boxShadow: "0 14px 20px rgba(40,54,24,0.18)",
+    boxShadow: "0 12px 18px rgba(40,54,24,0.18)",
   },
 
   doneBtn: {
@@ -1088,7 +1060,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     fontSize: 16,
-    boxShadow: "0 16px 24px rgba(40,54,24,0.2)",
+    boxShadow: "0 14px 20px rgba(40,54,24,0.18)",
   },
   archiveBadge: {
     marginTop: 16,
@@ -1100,6 +1072,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     fontSize: 15,
     textAlign: "center",
-    boxShadow: "0 14px 20px rgba(188,108,37,0.18)",
+    boxShadow: "0 12px 18px rgba(188,108,37,0.16)",
   },
 };
