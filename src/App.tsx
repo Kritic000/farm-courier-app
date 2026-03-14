@@ -117,10 +117,9 @@ export default function App() {
     window.location.href = `tel:${cleanPhone}`;
   }
 
-  function openTelegramOrCall(username?: string, userId?: string, phone?: string) {
+  function openTelegram(username?: string, userId?: string) {
     const cleanUsername = String(username || "").replace(/^@/, "").trim();
     const cleanUserId = String(userId || "").trim();
-    const cleanPhone = String(phone || "").trim();
 
     if (cleanUsername) {
       openExternalLink(`https://t.me/${cleanUsername}`);
@@ -132,12 +131,7 @@ export default function App() {
       return;
     }
 
-    if (cleanPhone) {
-      window.location.href = `tel:${cleanPhone}`;
-      return;
-    }
-
-    alert("У клиента не указан Telegram и телефон");
+    alert("У клиента не указан Telegram");
   }
 
   async function markDone(orderId: string) {
@@ -610,9 +604,9 @@ export default function App() {
 
                 <button
                   style={styles.actionBtn}
-                  onClick={() => openTelegramOrCall(o.tgUsername, o.tgUserId, o.phone)}
+                  onClick={() => openTelegram(o.tgUsername, o.tgUserId)}
                 >
-                  Telegram / звонок
+                  Telegram
                 </button>
 
                 <button
