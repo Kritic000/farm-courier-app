@@ -89,6 +89,129 @@ export default function App() {
     }
   }
 
+  function getUserAgent() {
+    return String(navigator.userAgent || "").toLowerCase();
+  }
+
+  function isAndroid() {
+    return /android/.test(getUserAgent());
+  }
+
+  function isIOS() {
+    return /iphone|ipad|ipod/.test(getUserAgent());
+  }
+
+  function buildYandexWebRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
+  }
+
+  function buildYandexAppRouteUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `yandexmaps://maps.yandex.ru/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
+  }
+
+  function buildYandexAndroidIntentUrl(points: Array<{ lat: number; lon: number }>) {
+    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
+    return `intent://maps.yandex.ru/?rtext=${encodeURIComponent(
+      routeText
+    )}&rtt=auto#Intent;scheme=yandexmaps;package=ru.yandex.yandexmaps;end`;
+  }
+
+  function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
+    const webUrl = buildYandexWebRouteUrl(points);
+    const appUrl = buildYandexAppRouteUrl(points);
+    const intentUrl = buildYandexAndroidIntentUrl(points);
+
+    let fallbackUsed = false;
+    let fallbackTimer: number | null = null;
+
+    const cleanup = () => {
+      if (fallbackTimer !== null) {
+        window.clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("blur", handleBlur);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cleanup();
+      }
+    };
+
+    const handlePageHide = () => {
+      cleanup();
+    };
+
+    const handleBlur = () => {
+      cleanup();
+    };
+
+    const fallbackToWeb = () => {
+      if (fallbackUsed) return;
+      fallbackUsed = true;
+      cleanup();
+      openExternalLink(webUrl);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("blur", handleBlur);
+
+    fallbackTimer = window.setTimeout(() => {
+      fallbackToWeb();
+    }, 1200);
+
+    try {
+      if (isAndroid()) {
+        try {
+          window.location.href = intentUrl;
+          return;
+        } catch (e) {
+          console.warn("Android intent failed:", e);
+        }
+
+        try {
+          window.location.href = appUrl;
+          return;
+        } catch (e) {
+          console.warn("Android app url failed:", e);
+        }
+
+        fallbackToWeb();
+        return;
+      }
+
+      if (isIOS()) {
+        try {
+          window.location.href = appUrl;
+          return;
+        } catch (e) {
+          console.warn("iOS app url failed:", e);
+        }
+
+        fallbackToWeb();
+        return;
+      }
+
+      try {
+        window.location.href = appUrl;
+        return;
+      } catch (e) {
+        console.warn("Generic app url failed:", e);
+      }
+
+      fallbackToWeb();
+    } catch (e) {
+      console.error("openYandexRoute failed:", e);
+      fallbackToWeb();
+    }
+  }
+
   async function copyText(text: string) {
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -306,16 +429,6 @@ export default function App() {
     }
 
     return result;
-  }
-
-  function buildYandexWebRouteUrl(points: Array<{ lat: number; lon: number }>) {
-    const routeText = points.map((p) => `${p.lat},${p.lon}`).join("~");
-    return `https://yandex.ru/maps/?rtext=${encodeURIComponent(routeText)}&rtt=auto`;
-  }
-
-  function openYandexRoute(points: Array<{ lat: number; lon: number }>) {
-    const webUrl = buildYandexWebRouteUrl(points);
-    openExternalLink(webUrl);
   }
 
   function formatWeekLabel(createdAt?: string) {
